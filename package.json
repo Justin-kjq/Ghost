@@ -1,0 +1,30 @@
+{
+  "name": "ghost-solana",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "relayer",
+    "sdk",
+    "circuits"
+  ],
+  "scripts": {
+    "build:program": "anchor build",
+    "deploy:devnet": "anchor deploy --provider.cluster devnet",
+    "relayer": "npm run dev --workspace @ghost/relayer",
+    "frontend": "npm run dev --workspace @ghost/frontend",
+    "circuits:ptau": "npm run ptau --workspace @ghost/circuits",
+    "circuits:build": "npm run build --workspace @ghost/circuits",
+    "init:pool": "tsx scripts/initialize_pool.ts",
+    "mint:usdc": "tsx scripts/create_devnet_usdc.ts"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.98.0",
+    "bs58": "^6.0.0",
+    "chai": "^4.5.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
