@@ -1,0 +1,13 @@
+{
+  "name": "@ghost/circuits",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "ptau": "node scripts/ptau.mjs"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "snarkjs": "^0.7.5"
+  }
+}
