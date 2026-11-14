@@ -94,7 +94,8 @@ export default function NotesPage() {
             {notes.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-muted-foreground">
-                  No notes in this browser.
+                  No notes in this browser yet. Deposit 1 USDC to receive one — then
+                  export it before you clear storage.
                 </TableCell>
               </TableRow>
             )}

@@ -1,20 +1,22 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { GhostWordmark } from "@/components/ghost-mark";
+import { GITHUB_REPO } from "@/lib/addresses";
 
 const links = [
-  { href: "#product", label: "Product" },
+  { href: "#verify", label: "Verify" },
   { href: "#how", label: "How it works" },
-  { href: "https://github.com/Arnab-Afk/Ghost", label: "Docs", external: true },
+  { href: GITHUB_REPO, label: "Docs", external: true },
 ];
 
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-hairline/80 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5">
-        <Link href="/" className="font-serif text-xl tracking-tight">
-          Ghost
+      <div className="mx-auto flex h-[4.25rem] w-full max-w-6xl items-center justify-between gap-4 px-5">
+        <Link href="/" className="hover:opacity-80">
+          <GhostWordmark markClassName="size-8" />
         </Link>
-        <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
+        <nav className="hidden items-center gap-8 text-[14.5px] text-foreground/85 md:flex">
           {links.map((l) =>
             l.external ? (
               <a
@@ -35,7 +37,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <details className="relative md:hidden">
-            <summary className="cursor-pointer list-none text-sm text-muted-foreground [&::-webkit-details-marker]:hidden">
+            <summary className="cursor-pointer list-none text-[14.5px] text-foreground/80 [&::-webkit-details-marker]:hidden">
               Menu
             </summary>
             <div className="absolute right-0 mt-3 w-44 rounded-lg border border-hairline bg-background p-3 text-sm shadow-sm">
@@ -43,7 +45,7 @@ export function SiteHeader() {
                 <a
                   key={l.label}
                   href={l.href}
-                  className="block py-1.5 text-muted-foreground hover:text-foreground"
+                  className="block py-1.5 text-foreground/80 hover:text-foreground"
                   {...(l.external ? { target: "_blank", rel: "noreferrer" } : {})}
                 >
                   {l.label}

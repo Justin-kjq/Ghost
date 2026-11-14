@@ -110,12 +110,12 @@ async function main() {
     await shot(page, "landing-desktop-1440.png");
 
     const height = await page.evaluate(() => document.body.scrollHeight);
-    for (let y = 0; y < height; y += 420) {
+    for (let y = 0; y < height; y += 280) {
       await page.evaluate((top) => window.scrollTo({ top, behavior: "smooth" }), y);
-      await page.waitForTimeout(350);
+      await page.waitForTimeout(550);
     }
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(700);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(400);
@@ -144,8 +144,17 @@ async function main() {
     await shot(page, "app-overview-mobile-390.png");
     await page.setViewportSize({ width: 1440, height: 900 });
 
+    await page.goto(`${UI}/app/activity`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(700);
+    await shot(page, "app-activity-desktop-1440.png");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(500);
+    await shot(page, "app-activity-mobile-390.png");
+    await page.setViewportSize({ width: 1440, height: 900 });
+
     await page.goto(`${UI}/app/deposit`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(600);
+    await shot(page, "app-deposit-desktop-1440.png");
     await page.getByTestId("deposit-submit").click();
     await page.getByTestId("deposit-note").waitFor({ timeout: 180_000 });
     const noteText = (await page.getByTestId("deposit-note").innerText()) ?? "";
@@ -156,7 +165,11 @@ async function main() {
     console.log("UI deposit tx:", depositTx);
 
     await page.goto(`${UI}/app/withdraw`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(600);
+    const recipientValue = await page.locator("#recipient").inputValue();
+    if (recipientValue) {
+      throw new Error(`privacy: recipient was pre-filled (${recipientValue.slice(0, 8)}…)`);
+    }
     await shot(page, "app-withdraw-desktop-1440.png");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(400);

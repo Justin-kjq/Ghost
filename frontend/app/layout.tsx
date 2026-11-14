@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { SITE_URL } from "@/lib/addresses";
 import "./globals.css";
 
 const serif = Instrument_Serif({
@@ -21,9 +22,28 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ghost — Private USDC on Solana",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Ghost — Private USDC on Solana",
+    template: "%s · Ghost",
+  },
   description:
-    "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Proofs stay in the browser.",
+    "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Proofs stay in the browser. Unaudited MVP — test funds only.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: "Ghost",
+    title: "Ghost — Private USDC on Solana",
+    description:
+      "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Unaudited MVP — test funds only.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ghost — Private USDC on Solana",
+    description:
+      "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Unaudited MVP — test funds only.",
+  },
 };
 
 export default function RootLayout({

@@ -21,6 +21,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { GhostWordmark } from "@/components/ghost-mark";
+import { WalletChip } from "@/components/wallet-chip";
 import { CLUSTER } from "@/lib/config";
 
 const items = [
@@ -37,11 +39,11 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Link href="/" className="font-serif text-xl tracking-tight">
-          Ghost
+        <Link href="/" className="hover:opacity-80">
+          <GhostWordmark markClassName="size-7" />
         </Link>
-        <p className="mt-1 font-mono text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
-          {CLUSTER}
+        <p className="mt-2 font-mono text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+          {CLUSTER} · test funds
         </p>
       </SidebarHeader>
       <SidebarContent>
@@ -55,7 +57,11 @@ export function AppSidebar() {
                     : pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={active}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      className="data-[active=true]:bg-foreground data-[active=true]:text-background"
+                    >
                       <Link href={item.href}>
                         <item.icon />
                         <span>{item.label}</span>
@@ -68,8 +74,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="px-4 py-4 text-xs text-muted-foreground">
-        Lean MVP · Devnet
+      <SidebarFooter className="px-3 py-4">
+        <WalletChip compact />
       </SidebarFooter>
     </Sidebar>
   );

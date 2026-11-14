@@ -58,7 +58,7 @@
   --secondary: #f7f4ef;
   --secondary-foreground: #161412;
   --muted: #efeae2;
-  --muted-foreground: #6b6560;
+  --muted-foreground: #5a544e;
   --accent: #efeae2;
   --accent-foreground: #161412;
   --destructive: #9f3a32;
@@ -121,6 +121,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 17.5px;
+    line-height: 1.6;
   }
   h1,
   h2,
@@ -170,4 +172,54 @@ body::before {
 }
 .fade-up-delay-3 {
   animation-delay: 0.36s;
+}
+
+.hero-title {
+  font-size: clamp(48px, 6vw, 88px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+.section-title {
+  font-size: clamp(36px, 4.2vw, 56px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.prose-muted {
+  max-width: 60ch;
+  font-size: 17.5px;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+}
+
+.hero-geometry {
+  background-image:
+    radial-gradient(ellipse 70% 55% at 78% 32%, rgba(176, 141, 87, 0.18), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 8% 0%, rgba(247, 244, 239, 0.9), transparent 70%),
+    linear-gradient(to right, rgba(22, 20, 18, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 20, 18, 0.06) 1px, transparent 1px);
+  background-size: auto, auto, 88px 88px, 88px 88px;
+}
+
+.hero-geometry::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 72% 18%, transparent 32%, rgba(22, 20, 18, 0.06) 32.5%, transparent 33.2%),
+    radial-gradient(circle at 82% 68%, transparent 20%, rgba(22, 20, 18, 0.055) 20.5%, transparent 21.2%),
+    radial-gradient(circle at 18% 42%, transparent 16%, rgba(22, 20, 18, 0.045) 16.5%, transparent 17.2%);
+  pointer-events: none;
+}
+
+.hero-art-mask {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 18%, #000 100%),
+    linear-gradient(to top, transparent 0%, #000 16%, #000 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 18%, #000 100%),
+    linear-gradient(to top, transparent 0%, #000 16%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }

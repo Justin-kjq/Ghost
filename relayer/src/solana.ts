@@ -215,6 +215,13 @@ export async function fetchPool() {
   const mint = getMint();
   const [pool] = poolPda(mint, getProgramId());
   const account: any = await (program.account as any).poolConfig.fetch(pool);
+  let vaultBalanceUi: string | null = null;
+  try {
+    const bal = await getConnection().getTokenAccountBalance(account.vault);
+    vaultBalanceUi = bal.value.uiAmountString ?? String(bal.value.uiAmount ?? "");
+  } catch {
+    vaultBalanceUi = null;
+  }
   return {
     address: pool.toBase58(),
     authority: account.authority.toBase58(),
@@ -226,6 +233,7 @@ export async function fetchPool() {
     feeBps: account.feeBps,
     nextIndex: account.nextIndex as number,
     depositCount: account.depositCount as number,
+    vaultBalanceUi,
   };
 }
 
