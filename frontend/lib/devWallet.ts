@@ -82,6 +82,10 @@ export class GhostDevWalletAdapter extends BaseMessageSignerWalletAdapter {
     console.log("[ghost] adapter connected", kp.publicKey.toBase58());
   }
 
+  async autoConnect() {
+    await this.connect();
+  }
+
   async disconnect() {
     this._keypair = null;
     this.emit("disconnect");

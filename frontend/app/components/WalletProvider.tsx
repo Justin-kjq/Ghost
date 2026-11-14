@@ -20,6 +20,7 @@ function AutoConnectDevWallet() {
   useEffect(() => {
     if (!ENABLE_DEV_WALLET || connected || connecting) return;
     if (typeof window === "undefined" || !window.__GHOST_DEV_WALLET__) return;
+    if (!window.location.pathname.startsWith("/app")) return;
     const ghost = wallets.find((w) => w.adapter.name === GhostDevWalletName);
     if (!ghost) return;
     if (wallet?.adapter.name !== GhostDevWalletName) {
@@ -50,7 +51,7 @@ export function SolanaProviders({ children }: { children: ReactNode }) {
   }, []);
   return (
     <ConnectionProvider endpoint={RPC_URL}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect={false}>
         <WalletModalProvider>
           {ENABLE_DEV_WALLET ? <AutoConnectDevWallet /> : null}
           {children}

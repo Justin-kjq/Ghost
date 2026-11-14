@@ -8,6 +8,7 @@ export const RELAYER_URL =
 export const CLUSTER = process.env.NEXT_PUBLIC_CLUSTER || "devnet";
 export const ENABLE_DEV_WALLET =
   process.env.NEXT_PUBLIC_ENABLE_DEV_WALLET === "true";
+export const USDC_MINT_STR = process.env.NEXT_PUBLIC_USDC_MINT || "";
 export const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID || DEFAULT_PROGRAM_ID,
 );

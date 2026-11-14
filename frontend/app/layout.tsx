@@ -1,22 +1,29 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Sans } from "next/font/google";
-import { SolanaProviders } from "./components/WalletProvider";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const display = Fraunces({
+const serif = Instrument_Serif({
   subsets: ["latin"],
-  variable: "--font-display-loaded",
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
 });
 
-const body = IBM_Plex_Sans({
+const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-body-loaded",
+  variable: "--font-sans",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
-  title: "Ghost — Solana Privacy Pool",
-  description: "Compliant-leaning private USDC transfers on Solana Devnet",
+  title: "Ghost — Private USDC on Solana",
+  description:
+    "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Proofs stay in the browser.",
 };
 
 export default function RootLayout({
@@ -24,8 +31,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${body.variable}`}>
-        <SolanaProviders>{children}</SolanaProviders>
+      <body
+        className={`${serif.variable} ${sans.variable} ${mono.variable} min-h-screen`}
+      >
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
