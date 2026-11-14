@@ -2,6 +2,7 @@ import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
@@ -15,56 +16,77 @@ import bs58 from "bs58";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bigIntToBytes32 } from "@ghost/sdk";
+import {
+  bigIntToBytes32,
+  commitmentPda,
+  leafPda,
+  nullifierPda,
+  poolPda,
+} from "@ghost/sdk";
+import { loadConfig } from "./config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Load the fee-payer keypair.
+ *
+ * Preferred: RELAYER_KEYPAIR_PATH pointing at a standard Solana
+ * `solana-keygen` 64-byte JSON array file (the format the host uses).
+ * Fallback: RELAYER_SECRET_KEY as the same JSON array string, or bs58.
+ */
 export function loadRelayerKeypair(): Keypair {
-  const secret = process.env.RELAYER_SECRET_KEY;
-  if (!secret) throw new Error("Missing RELAYER_SECRET_KEY");
-  if (secret.startsWith("[")) {
-    return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(secret)));
+  const cfg = loadConfig();
+  if (cfg.keypairPath) {
+    if (!existsSync(cfg.keypairPath)) {
+      throw new Error(`RELAYER_KEYPAIR_PATH not found: ${cfg.keypairPath}`);
+    }
+    const raw = readFileSync(cfg.keypairPath, "utf8").trim();
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new Error(
+        "Relayer keypair file must be a Solana 64-byte JSON array (solana-keygen format)",
+      );
+    }
+    if (!Array.isArray(parsed) || parsed.length !== 64) {
+      throw new Error(
+        "Relayer keypair file must be a Solana 64-byte JSON array (solana-keygen format)",
+      );
+    }
+    if (!parsed.every((n) => Number.isInteger(n) && n >= 0 && n <= 255)) {
+      throw new Error("Relayer keypair file contains invalid byte values");
+    }
+    return Keypair.fromSecretKey(Uint8Array.from(parsed));
+  }
+  const secret = cfg.secretKey;
+  if (!secret) {
+    throw new Error(
+      "Set RELAYER_KEYPAIR_PATH to a 64-byte JSON keypair file (preferred) or RELAYER_SECRET_KEY",
+    );
+  }
+  if (secret.trim().startsWith("[")) {
+    const parsed = JSON.parse(secret) as number[];
+    if (!Array.isArray(parsed) || parsed.length !== 64) {
+      throw new Error("RELAYER_SECRET_KEY JSON must be a 64-byte array");
+    }
+    return Keypair.fromSecretKey(Uint8Array.from(parsed));
   }
   return Keypair.fromSecretKey(bs58.decode(secret));
 }
 
 export function getConnection(): Connection {
-  return new Connection(process.env.RPC_URL || "https://api.devnet.solana.com", "confirmed");
+  return new Connection(loadConfig().rpcUrl, "confirmed");
 }
 
 export function getProgramId(): PublicKey {
-  return new PublicKey(
-    process.env.PROGRAM_ID || "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
-  );
+  return loadConfig().programId;
 }
 
 export function getMint(): PublicKey {
-  if (!process.env.USDC_MINT) throw new Error("Missing USDC_MINT");
-  return new PublicKey(process.env.USDC_MINT);
-}
-
-export function poolPda(mint: PublicKey, programId: PublicKey): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync([Buffer.from("pool"), mint.toBuffer()], programId);
-}
-
-export function commitmentPda(
-  commitment: Uint8Array | number[],
-  programId: PublicKey,
-): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("commitment"), Buffer.from(commitment)],
-    programId,
-  );
-}
-
-export function nullifierPda(
-  nullifier: Uint8Array | number[],
-  programId: PublicKey,
-): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("nullifier"), Buffer.from(nullifier)],
-    programId,
-  );
+  const mint = loadConfig().usdcMint;
+  if (!mint) throw new Error("Missing USDC_MINT");
+  return mint;
 }
 
 function loadIdl(): any {
@@ -81,6 +103,50 @@ export function getProgram(payer: Keypair): Program {
   const idl = loadIdl();
   idl.address = getProgramId().toBase58();
   return new Program(idl, provider);
+}
+
+export async function fetchCommitmentRecord(commitment: number[]): Promise<{
+  commitment: number[];
+  leafIndex: number;
+} | null> {
+  const relayer = loadRelayerKeypair();
+  const program = getProgram(relayer);
+  const [pda] = commitmentPda(commitment, getProgramId());
+  try {
+    const account: any = await (program.account as any).commitmentRecord.fetch(pda);
+    return {
+      commitment: Array.from(account.commitment as number[] | Uint8Array),
+      leafIndex: account.leafIndex as number,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchLeafRecord(leafIndex: number): Promise<{
+  commitment: number[];
+  leafIndex: number;
+} | null> {
+  const relayer = loadRelayerKeypair();
+  const program = getProgram(relayer);
+  const mint = getMint();
+  const [pda] = leafPda(mint, leafIndex, getProgramId());
+  try {
+    const account: any = await (program.account as any).leafRecord.fetch(pda);
+    return {
+      commitment: Array.from(account.commitment as number[] | Uint8Array),
+      leafIndex: account.leafIndex as number,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function nullifierExists(nullifier: number[]): Promise<boolean> {
+  const connection = getConnection();
+  const [pda] = nullifierPda(nullifier, getProgramId());
+  const info = await connection.getAccountInfo(pda);
+  return info !== null;
 }
 
 export async function submitWithdraw(params: {
@@ -118,12 +184,10 @@ export async function submitWithdraw(params: {
     })
     .transaction();
 
-  // Ensure recipient ATA exists — create if needed (relayer pays)
   const connection = getConnection();
   const info = await connection.getAccountInfo(recipientToken);
   const ixs = [];
   if (!info) {
-    const { createAssociatedTokenAccountInstruction } = await import("@solana/spl-token");
     ixs.push(
       createAssociatedTokenAccountInstruction(
         relayer.publicKey,
@@ -160,7 +224,9 @@ export async function fetchPool() {
     treasury: account.treasury.toBase58(),
     denomination: account.denomination?.toString?.() ?? String(account.denomination),
     feeBps: account.feeBps,
-    nextIndex: account.nextIndex,
-    depositCount: account.depositCount,
+    nextIndex: account.nextIndex as number,
+    depositCount: account.depositCount as number,
   };
 }
+
+export { poolPda, commitmentPda, leafPda, nullifierPda };

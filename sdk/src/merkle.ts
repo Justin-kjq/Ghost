@@ -66,3 +66,20 @@ export async function getMerklePath(
 
   return { pathElements, pathIndices, root };
 }
+
+/** Recompute the root from a leaf + path; used to sanity-check SDK vs circuit. */
+export async function reconstructRoot(
+  leaf: bigint,
+  pathElements: bigint[],
+  pathIndices: number[],
+): Promise<bigint> {
+  const poseidon = await getPoseidon();
+  let hash = leaf;
+  for (let i = 0; i < pathElements.length; i++) {
+    const sibling = pathElements[i];
+    hash = pathIndices[i]
+      ? poseidon([sibling, hash])
+      : poseidon([hash, sibling]);
+  }
+  return hash;
+}

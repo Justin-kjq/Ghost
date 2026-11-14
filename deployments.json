@@ -1,0 +1,27 @@
+{
+  "programId": "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR",
+  "hostedRelayerDevnet": "EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf",
+  "localnet": {
+    "programId": "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR"
+  },
+  "devnet": {
+    "programId": "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR",
+    "relayer": "EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf",
+    "usdcMint": "",
+    "pool": "",
+    "deployTx": "",
+    "depositTx": "",
+    "withdrawTx": "",
+    "relayerFundTx": "",
+    "note": "Not deployed from this PR: public RPC requestAirdrop returns 410 (faucet closed); faucet.solana.com requires GitHub login. Localnet e2e succeeded."
+  },
+  "testnet": {
+    "programId": "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR",
+    "usdcMint": "",
+    "pool": "",
+    "deployTx": "",
+    "depositTx": "",
+    "withdrawTx": "",
+    "note": "Same faucet blockage as Devnet. Not deployed from this PR."
+  }
+}

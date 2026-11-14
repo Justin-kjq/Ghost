@@ -46,6 +46,20 @@ export function encodeNote(
   ].join(":");
 }
 
+const SNARK_FIELD =
+  21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+
+function parseHexField(hex: string, label: string): bigint {
+  if (!/^[0-9a-fA-F]+$/.test(hex) || hex.length > 64) {
+    throw new Error(`Invalid Ghost Note ${label}`);
+  }
+  const value = BigInt("0x" + hex);
+  if (value >= SNARK_FIELD) {
+    throw new Error(`Ghost Note ${label} is not a valid BN254 field element`);
+  }
+  return value;
+}
+
 export function decodeNote(raw: string): GhostNote {
   const parts = raw.trim().split(":");
   if (parts.length !== 8 || parts[0] !== "ghost" || parts[1] !== "v1") {
@@ -53,12 +67,16 @@ export function decodeNote(raw: string): GhostNote {
       `Invalid Ghost Note — expected ghost:v1:secret:nullifier:amount:token:leafIndex:commitment`,
     );
   }
+  const leafIndex = Number(parts[6]);
+  if (!Number.isInteger(leafIndex) || leafIndex < 0) {
+    throw new Error("Invalid Ghost Note leafIndex");
+  }
   return {
-    secret: BigInt("0x" + parts[2]),
-    nullifier: BigInt("0x" + parts[3]),
+    secret: parseHexField(parts[2], "secret"),
+    nullifier: parseHexField(parts[3], "nullifier"),
     amount: parts[4],
-    leafIndex: Number(parts[6]),
-    commitment: BigInt("0x" + parts[7]),
+    leafIndex,
+    commitment: parseHexField(parts[7], "commitment"),
     raw,
   };
 }

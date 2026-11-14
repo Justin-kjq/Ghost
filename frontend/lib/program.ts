@@ -1,5 +1,6 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { commitmentPda as sdkCommitmentPda, leafPda as sdkLeafPda, poolPda as sdkPoolPda } from "@ghost/sdk";
 import idl from "../idl/ghost_pool.json";
 import { PROGRAM_ID, RPC_URL } from "./config";
 
@@ -18,15 +19,13 @@ export function getProgram(wallet: any): Program {
 }
 
 export function poolPda(mint: PublicKey): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("pool"), mint.toBuffer()],
-    PROGRAM_ID,
-  );
+  return sdkPoolPda(mint, PROGRAM_ID);
 }
 
 export function commitmentPda(commitment: number[]): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("commitment"), Buffer.from(commitment)],
-    PROGRAM_ID,
-  );
+  return sdkCommitmentPda(commitment, PROGRAM_ID);
+}
+
+export function leafPda(mint: PublicKey, leafIndex: number): [PublicKey, number] {
+  return sdkLeafPda(mint, leafIndex, PROGRAM_ID);
 }

@@ -4,3 +4,5 @@ export * from "./poseidon";
 export * from "./merkle";
 export * from "./proof";
 export * from "./recipient";
+export * from "./pda";
+export * from "./fees";

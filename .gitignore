@@ -10,9 +10,11 @@ relayer/data/
 circuits/build/
 frontend/public/zk/*.wasm
 frontend/public/zk/*.zkey
-frontend/public/zk/verification_key.json
-relayer/zk/verification_key.json
 **/.DS_Store
 *.log
+*.tsbuildinfo
 test-ledger/
 .yarn/
+.keys/
+keys/*-operator.json
+keys/relayer.json

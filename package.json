@@ -9,21 +9,33 @@
     "circuits"
   ],
   "scripts": {
-    "build:program": "anchor build",
-    "deploy:devnet": "anchor deploy --provider.cluster devnet",
+    "program:prepare": "mkdir -p target/deploy && cp keys/ghost_pool-keypair.json target/deploy/ghost_pool-keypair.json",
+    "build:program": "bash scripts/build_program.sh",
+    "idl:sync": "cp target/idl/ghost_pool.json relayer/idl/ghost_pool.json && cp target/idl/ghost_pool.json frontend/idl/ghost_pool.json",
+    "deploy:devnet": "npm run program:prepare && anchor deploy --provider.cluster devnet",
+    "deploy:testnet": "npm run program:prepare && anchor deploy --provider.cluster testnet",
     "relayer": "npm run dev --workspace @ghost/relayer",
     "frontend": "npm run dev --workspace @ghost/frontend",
     "circuits:ptau": "npm run ptau --workspace @ghost/circuits",
     "circuits:build": "npm run build --workspace @ghost/circuits",
     "init:pool": "tsx scripts/initialize_pool.ts",
-    "mint:usdc": "tsx scripts/create_devnet_usdc.ts"
+    "mint:usdc": "tsx scripts/create_devnet_usdc.ts",
+    "fund:relayer": "tsx scripts/fund_hosted_relayer.ts",
+    "test": "npm test --workspace @ghost/sdk && npm test --workspace @ghost/relayer",
+    "test:anchor": "bash scripts/build_program.sh && anchor test --skip-build",
+    "test:e2e": "tsx scripts/e2e_local.ts"
   },
   "devDependencies": {
     "@coral-xyz/anchor": "^0.30.1",
+    "@coral-xyz/anchor-cli": "^0.30.1",
     "@solana/spl-token": "^0.4.9",
     "@solana/web3.js": "^1.98.0",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
     "bs58": "^6.0.0",
     "chai": "^4.5.0",
+    "mocha": "^11.8.0",
+    "ts-mocha": "^11.1.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

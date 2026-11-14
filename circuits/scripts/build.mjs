@@ -14,7 +14,10 @@ function run(cmd) {
 }
 
 const circom = process.env.CIRCOM_PATH || "circom";
-run(`${circom} merkle_proof.circom --r1cs --wasm --sym -o build`);
+// circomlib is hoisted to the workspace root under npm workspaces.
+run(
+  `${circom} merkle_proof.circom --r1cs --wasm --sym -o build -l node_modules -l ../node_modules`,
+);
 
 const ptau = join(buildDir, "pot15_final.ptau");
 if (!existsSync(ptau)) {

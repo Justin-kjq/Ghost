@@ -1,5 +1,5 @@
 {
-  "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  "address": "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR",
   "metadata": {
     "name": "ghost_pool",
     "version": "0.1.0",
@@ -36,6 +36,7 @@
         { "name": "vault", "writable": true },
         { "name": "depositor_token", "writable": true },
         { "name": "commitment_record", "writable": true },
+        { "name": "leaf_record", "writable": true },
         { "name": "system_program", "address": "11111111111111111111111111111111" },
         { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
       ],
@@ -81,6 +82,10 @@
       "discriminator": [216, 195, 138, 99, 88, 191, 32, 246]
     },
     {
+      "name": "LeafRecord",
+      "discriminator": [158, 183, 135, 177, 117, 36, 34, 44]
+    },
+    {
       "name": "NullifierRecord",
       "discriminator": [56, 18, 57, 175, 69, 202, 189, 70]
     },
@@ -110,6 +115,17 @@
   "types": [
     {
       "name": "CommitmentRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "commitment", "type": { "array": ["u8", 32] } },
+          { "name": "leaf_index", "type": "u32" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "LeafRecord",
       "type": {
         "kind": "struct",
         "fields": [

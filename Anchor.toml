@@ -6,17 +6,20 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-ghost_pool = "Gh0stPoo1LeanMVP11111111111111111111111111"
+ghost_pool = "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR"
 
 [programs.devnet]
-ghost_pool = "Gh0stPoo1LeanMVP11111111111111111111111111"
+ghost_pool = "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR"
+
+[programs.testnet]
+ghost_pool = "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

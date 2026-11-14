@@ -14,7 +14,12 @@
     "circomlibjs": "^0.1.7",
     "snarkjs": "^0.7.6"
   },
+  "scripts": {
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
 }

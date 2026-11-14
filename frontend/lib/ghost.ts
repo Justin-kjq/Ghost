@@ -1,9 +1,5 @@
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddressSync,
-} from "@solana/spl-token";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { SystemProgram } from "@solana/web3.js";
 import {
   bigIntToBytes32,
   createCommitment,
@@ -12,7 +8,7 @@ import {
   generateWithdrawProof,
 } from "@ghost/sdk";
 import { RELAYER_URL, getUsdcMint } from "./config";
-import { commitmentPda, getProgram, poolPda } from "./program";
+import { commitmentPda, getProgram, leafPda, poolPda } from "./program";
 
 export async function depositUsdc(wallet: any): Promise<{
   signature: string;
@@ -29,6 +25,7 @@ export async function depositUsdc(wallet: any): Promise<{
   const { secret, nullifier, commitment } = await createCommitment();
   const commitmentBytes = bigIntToBytes32(commitment);
   const [commitmentRecord] = commitmentPda(commitmentBytes);
+  const [leafRecord] = leafPda(mint, leafIndex);
 
   const depositorToken = getAssociatedTokenAddressSync(mint, wallet.publicKey);
 
@@ -40,6 +37,7 @@ export async function depositUsdc(wallet: any): Promise<{
       vault: poolAccount.vault,
       depositorToken,
       commitmentRecord,
+      leafRecord,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
@@ -93,7 +91,6 @@ export async function withdrawWithNote(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      note: noteRaw,
       recipient,
       proof: proofPayload.proof,
       publicSignals: proofPayload.publicSignals,

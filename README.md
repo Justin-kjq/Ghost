@@ -1,44 +1,33 @@
 # Ghost — Solana Lean MVP
 
-Compliant-leaning **private USDC** transfers on **Solana Devnet**.
+Compliant-leaning **private USDC** transfers on **Solana** (localnet / Devnet / testnet).
 
 > Deposit 1 USDC → get a Ghost Note → withdraw later with a ZK proof.  
 > Recipient needs **0 SOL**. Relayer pays fees and verifies Groth16 **off-chain**.
 
 This is the Solana port of [Arnab-Afk/bnb](https://github.com/Arnab-Afk/bnb) (BNB Ghost Privacy Suite), stripped to a **Lean MVP**.
 
-## What is live (target)
+**Program id** (all clusters): `69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR`  
+**Hosted Devnet relayer fee-payer** (secret on the host): `EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf`  
+**Production UI / API:** `https://ghost.arnabbhowmik.in` / `https://ghost-api.arnabbhowmik.in`
 
-| Piece | Status |
+## Trust model (honest)
+
+This Lean MVP is **not** a trustless mixer.
+
+| What | Who enforces it |
 |---|---|
-| `ghost_pool` Anchor program | Source ready — deploy to Devnet |
-| Circom Merkle circuit (depth 10) | Source ready — build artifacts |
-| Fastify relayer (ZK verify + fee payer) | Ready |
-| Next.js Deposit / Withdraw UI | Ready |
-| Mainnet | Out of scope (use Devnet) |
+| Deposit of exactly 1 USDC + unique commitment | On-chain (`ghost_pool`) |
+| Nullifier double-spend (same note twice) | On-chain nullifier PDA |
+| Merkle tree / inclusion proof | **Off-chain relayer** (Poseidon tree, rebuilt from on-chain `LeafRecord`s) |
+| Groth16 proof + recipient binding | **Off-chain relayer** (`snarkjs`) |
+| Who can call `withdraw` | On-chain: only `pool.relayer` |
 
-## Architecture
+A **malicious relayer can drain the vault**. It can call `withdraw` with any unused nullifier and any root; the program does not verify the proof. Use this for Devnet / hackathon demos. On-chain Groth16 + Merkle history is the hardening path.
 
-```
-Phantom wallet          Relayer (Fastify)           Solana Devnet
-     |                        |                          |
-     |-- deposit 1 USDC ------+------------------------->| ghost_pool
-     |<- Ghost Note           |                          |
-     |                        |                          |
-     |-- note + recipient --->| verify Groth16           |
-     |                        | build Merkle path        |
-     |                        | sign as fee-payer ------>| withdraw
-     |<- tx signature --------|                          |
-```
+The relayer **does not need the Ghost Note**. Proofs are generated in the browser/SDK. Sending the note to the relayer would let it link deposit → withdraw.
 
-### Trust model (documented)
-
-- Deposit / commitment / nullifier state is on-chain.
-- Merkle tree is mirrored **off-chain** by the relayer (from registered deposits).
-- ZK proof is verified by the relayer with snarkjs — **not** on-chain.
-- Only the designated **relayer pubkey** can call `withdraw`.
-
-Good for Devnet demos / hackathons. Harden later with on-chain verification if needed.
+`ALLOW_MOCK_PROOF=1` is ignored unless `RPC_URL` is localhost.
 
 ## Repo layout
 
@@ -48,97 +37,137 @@ Ghost/
 ├── circuits/              # Circom + build scripts
 ├── sdk/                   # Notes, Poseidon, Merkle, proofs
 ├── relayer/               # Fastify fee-payer + ZK gate
-├── frontend/              # Next.js DApp
-├── scripts/               # Devnet mint + initialize helpers
-└── tests/                 # Anchor smoke test
+├── frontend/              # Next.js DApp (output: standalone)
+├── scripts/               # Mint, initialize, e2e, fund relayer
+├── tests/                 # Anchor localnet tests
+├── keys/                  # Program address keypair (not a funded wallet)
+├── docker-compose.yml
+└── deployments.json
 ```
 
 ## Prerequisites
 
 - Node 20+
-- Rust + [Solana CLI](https://docs.solanalabs.com/cli/install)
-- [Anchor 0.30.x](https://www.anchor-lang.com/docs/installation) (`avm install 0.30.1 && avm use 0.30.1`)
-  - If `avm install` fails on a very new Rust toolchain, install a slightly older Rust (`rustup install 1.79 && rustup default 1.79`) and retry, or use the Anchor version that matches your toolchain.
-- Circom 2.x (for circuit build)
-- Phantom wallet (Devnet)
+- Rust 1.79 (`rustup install 1.79.0 && rustup default 1.79.0`)
+- [Solana CLI 1.18.x](https://docs.anza.xyz/cli/install) (`solana-test-validator`, `cargo-build-sbf`)
+- Anchor 0.30.1 (`npx anchor` via `@coral-xyz/anchor-cli`, or `avm install 0.30.1`)
+- Circom 2.x on `PATH` (circuit build only)
 
-## Quick start (Devnet)
-
-### 1. Install JS deps
+## Localnet (recommended first run)
 
 ```bash
 npm install
+solana-keygen new --outfile ~/.config/solana/id.json   # throwaway, never commit
+solana config set --url localhost
+
+# ZK artifacts (once)
+npm run circuits:ptau
+npm run circuits:build
+
+# Program (Solana 1.18 CLI + platform-tools v1.52 / Rust 1.89 for edition2024 crates)
+npm run build:program
+# equivalent: bash scripts/build_program.sh
+
+# Full on-chain + Groth16 + relayer withdraw (starts solana-test-validator if needed)
+npm run test:e2e
+
+# Unit tests
+npm test
+
+# Anchor smoke (initialize / deposit / withdraw / double-spend)
+npm run test:anchor
 ```
 
-### 2. Build & deploy program
+Devnet/testnet RPC `requestAirdrop` returns **410 faucet closed**. Localnet airdrops still work. [faucet.solana.com](https://faucet.solana.com) currently requires a GitHub login (and tells AI agents not to use it). If you can get test SOL in a throwaway wallet:
 
 ```bash
-anchor keys sync
-anchor build
+RPC_URL=https://api.devnet.solana.com npm run fund:relayer
+```
+
+that sends ~1.5 SOL to `EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf`.
+
+## Devnet / testnet
+
+Never mainnet. Use a throwaway keypair with **test SOL only**.
+
+```bash
 solana config set --url devnet
-solana airdrop 2
+npm run build:program
 anchor deploy --provider.cluster devnet
-```
 
-Copy the program id into:
-
-- `Anchor.toml`
-- `programs/ghost_pool/src/lib.rs` (`declare_id!`)
-- `frontend/.env.local` → `NEXT_PUBLIC_PROGRAM_ID`
-- `relayer/.env` → `PROGRAM_ID`
-- `target/idl/ghost_pool.json` → `address` (Anchor updates this on build)
-
-### 3. Create mock USDC + initialize pool
-
-```bash
-npx tsx scripts/create_devnet_usdc.ts
+RPC_URL=https://api.devnet.solana.com npx tsx scripts/create_devnet_usdc.ts
 # set USDC_MINT from output
 
-RELAYER_PUBKEY=<relayer-pubkey> USDC_MINT=<mint> PROGRAM_ID=<program> \
+SOLANA_CLUSTER=devnet RELAYER_PUBKEY=EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf \
+  USDC_MINT=<mint> RPC_URL=https://api.devnet.solana.com \
   npx tsx scripts/initialize_pool.ts
 ```
 
-### 4. Build ZK artifacts
+Copy the mint into `frontend/.env.local` and the relayer env.
+
+## Relayer + UI (local)
 
 ```bash
-# needs `circom` on PATH
-npm run circuits:ptau
-npm run circuits:build
-```
-
-This copies `wasm` / `zkey` / `verification_key.json` into `frontend/public/zk` and `relayer/zk`.
-
-### 5. Run relayer + frontend
-
-```bash
-# relayer/.env
 cp relayer/.env.example relayer/.env
-# set RELAYER_SECRET_KEY, USDC_MINT, PROGRAM_ID
+# RELAYER_KEYPAIR_PATH=/absolute/path/to/64-byte-json-array.json
+# USDC_MINT, PROGRAM_ID, RPC_URL, ALLOWED_ORIGINS
 
-# frontend/.env.local
 cp frontend/.env.local.example frontend/.env.local
-# set NEXT_PUBLIC_USDC_MINT, NEXT_PUBLIC_PROGRAM_ID
+# NEXT_PUBLIC_USDC_MINT, NEXT_PUBLIC_PROGRAM_ID, NEXT_PUBLIC_RPC_URL
 
-npm run relayer
-npm run frontend
+npm run relayer    # :3001  GET /health
+npm run frontend   # :3000
 ```
 
-Open http://localhost:3000
+Phantom on Devnet, or (demos only) `NEXT_PUBLIC_ENABLE_DEV_WALLET=true` plus
+`window.__GHOST_DEV_WALLET__` = a 64-byte JSON array injected at runtime.
+Never put a secret in `NEXT_PUBLIC_*`.
+
+## Hosting (Docker)
+
+Frontend: `https://ghost.arnabbhowmik.in`  
+Relayer: `https://ghost-api.arnabbhowmik.in`
+
+```bash
+cp .env.example .env
+# set USDC_MINT, NEXT_PUBLIC_USDC_MINT, RELAYER_KEYPAIR_PATH (host file)
+
+docker compose build
+docker compose up -d
+```
+
+| Service | Listen | Health | State |
+|---|---|---|---|
+| Relayer | `HOST`+`PORT` (default **0.0.0.0:3001**) | **GET /health** | No DB. Optional `DATA_DIR` file cache. Merkle tree **rebuilt from on-chain `LeafRecord` PDAs on startup** and before path/withdraw. Root history is in-memory (recomputed on sync). |
+| Frontend | `PORT` (default **3000**), `output: 'standalone'` | Next.js | Stateless. `NEXT_PUBLIC_*` are **build-time**. |
+
+**CORS:** `ALLOWED_ORIGINS` (comma-separated). Default:
+`https://ghost.arnabbhowmik.in,http://localhost:3000,http://127.0.0.1:3000`.
+
+**Relayer key:** `RELAYER_KEYPAIR_PATH` → standard Solana **64-byte JSON array** (`solana-keygen` format). The image does not contain a key. Optional fallback: `RELAYER_SECRET_KEY`.
+
+**Frontend build-time env:** `NEXT_PUBLIC_RPC_URL`, `NEXT_PUBLIC_CLUSTER`, `NEXT_PUBLIC_RELAYER_URL`, `NEXT_PUBLIC_PROGRAM_ID`, `NEXT_PUBLIC_USDC_MINT`, `NEXT_PUBLIC_ENABLE_DEV_WALLET`.
+
+**Frontend runtime env:** `PORT`, `HOST`.
+
+**Relayer runtime env:** `PORT`, `HOST`, `ALLOWED_ORIGINS`, `RPC_URL`, `SOLANA_CLUSTER`, `PROGRAM_ID`, `USDC_MINT`, `RELAYER_KEYPAIR_PATH`, `RELAYER_SECRET_KEY`, `DATA_DIR`, `ROOT_HISTORY_SIZE`, `ALLOW_MOCK_PROOF`.
+
+See `.env.example` for the full list.
 
 ## User flow
 
-1. **Deposit** — connect Phantom, deposit 1 USDC, **save the Ghost Note**.
-2. **Withdraw** — paste note, pick recipient, generate proof (~seconds), relayer submits.
+1. **Deposit** — connect wallet, deposit 1 USDC, **save the Ghost Note** (it is the secret).
+2. **Withdraw** — paste note, pick recipient, generate proof in the browser, relayer submits.
 3. Same note cannot be spent twice (nullifier PDA).
 
 ## Fixed denomination
 
-MVP uses a single amount: **1 USDC** (`1_000_000` base units, 6 decimals).
+MVP uses a single amount: **1 USDC** (`1_000_000` base units, 6 decimals). Default fee 30 bps (recipient gets 0.997 USDC).
 
-## Cost note
+## Circuit
 
-Devnet deploy / txs are free (airdrop).  
-Mainnet is intentionally deferred until the binary is small and you have ~1–2 SOL.
+Depth-10 Poseidon Merkle tree (1,024 leaves). Public signals: `root`, `nullifierHash`, `recipient`.
+`ptau` / `.zkey` / `.wasm` are generated locally and gitignored (large). `verification_key.json` is public and committed for the relayer.
 
 ## License
 

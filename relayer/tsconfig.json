@@ -10,5 +10,5 @@
     "rootDir": "src",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "../sdk/src/types/shims.d.ts"]
 }

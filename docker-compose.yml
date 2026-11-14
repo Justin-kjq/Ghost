@@ -1,0 +1,56 @@
+services:
+  relayer:
+    build:
+      context: .
+      dockerfile: relayer/Dockerfile
+    ports:
+      - "${RELAYER_PORT:-3001}:3001"
+    environment:
+      PORT: "3001"
+      HOST: "0.0.0.0"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://ghost.arnabbhowmik.in,http://localhost:3000,http://127.0.0.1:3000}
+      RPC_URL: ${RPC_URL:-https://api.devnet.solana.com}
+      SOLANA_CLUSTER: ${SOLANA_CLUSTER:-devnet}
+      PROGRAM_ID: ${PROGRAM_ID:-69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR}
+      USDC_MINT: ${USDC_MINT:-}
+      RELAYER_KEYPAIR_PATH: /keys/relayer.json
+      DATA_DIR: /data
+      ALLOW_MOCK_PROOF: "0"
+    volumes:
+      # Host-generated solana-keygen 64-byte JSON array. Never bake this in.
+      - ${RELAYER_KEYPAIR_PATH:-./.keys/relayer.json}:/keys/relayer.json:ro
+      - relayer-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_RPC_URL: ${NEXT_PUBLIC_RPC_URL:-https://api.devnet.solana.com}
+        NEXT_PUBLIC_CLUSTER: ${NEXT_PUBLIC_CLUSTER:-devnet}
+        NEXT_PUBLIC_RELAYER_URL: ${NEXT_PUBLIC_RELAYER_URL:-https://ghost-api.arnabbhowmik.in}
+        NEXT_PUBLIC_PROGRAM_ID: ${NEXT_PUBLIC_PROGRAM_ID:-69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR}
+        NEXT_PUBLIC_USDC_MINT: ${NEXT_PUBLIC_USDC_MINT:-}
+        NEXT_PUBLIC_ENABLE_DEV_WALLET: ${NEXT_PUBLIC_ENABLE_DEV_WALLET:-false}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+    depends_on:
+      relayer:
+        condition: service_healthy
+
+volumes:
+  relayer-data:

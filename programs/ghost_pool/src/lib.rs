@@ -2,13 +2,16 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR");
 
 /// Fixed denomination: 1 USDC (6 decimals).
 pub const DENOMINATION: u64 = 1_000_000;
 /// Default fee: 30 bps = 0.30%.
 pub const DEFAULT_FEE_BPS: u16 = 30;
 pub const BPS_DENOMINATOR: u64 = 10_000;
+/// Must match circuits/merkle_proof.circom and the SDK TREE_DEPTH.
+pub const TREE_DEPTH: u32 = 10;
+pub const MAX_LEAVES: u32 = 1 << TREE_DEPTH; // 1,024
 
 #[program]
 pub mod ghost_pool {
@@ -42,11 +45,15 @@ pub mod ghost_pool {
     }
 
     /// Deposit exactly `denomination` USDC and insert a Poseidon commitment.
-    /// Merkle tree updates happen off-chain from the Deposit event.
+    ///
+    /// The on-chain Merkle tree is **not** updated here (Lean MVP). A `LeafRecord`
+    /// PDA keyed by `(mint, leaf_index)` is written so an honest relayer can
+    /// rebuild the off-chain tree from chain after a restart.
     pub fn deposit(ctx: Context<Deposit>, commitment: [u8; 32]) -> Result<()> {
         require!(commitment != [0u8; 32], GhostError::InvalidCommitment);
 
         let pool = &mut ctx.accounts.pool;
+        require!(pool.next_index < MAX_LEAVES, GhostError::TreeFull);
         let leaf_index = pool.next_index;
 
         let cpi_accounts = Transfer {
@@ -63,6 +70,11 @@ pub mod ghost_pool {
         record.commitment = commitment;
         record.leaf_index = leaf_index;
         record.bump = ctx.bumps.commitment_record;
+
+        let leaf = &mut ctx.accounts.leaf_record;
+        leaf.commitment = commitment;
+        leaf.leaf_index = leaf_index;
+        leaf.bump = ctx.bumps.leaf_record;
 
         pool.next_index = leaf_index
             .checked_add(1)
@@ -84,6 +96,10 @@ pub mod ghost_pool {
 
     /// Withdraw denomination to `recipient` after off-chain ZK verification.
     /// Only the designated relayer may call this (Lean MVP trust model).
+    ///
+    /// The program does **not** verify Groth16 proofs or Merkle roots. A
+    /// malicious relayer can drain the vault. Nullifier PDAs still prevent
+    /// the same nullifier from being spent twice, even by the relayer.
     pub fn withdraw(
         ctx: Context<Withdraw>,
         nullifier: [u8; 32],
@@ -174,7 +190,7 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    pub mint: Account<'info, Mint>,
+    pub mint: Box<Account<'info, Mint>>,
 
     #[account(
         init,
@@ -183,7 +199,7 @@ pub struct Initialize<'info> {
         seeds = [b"pool", mint.key().as_ref()],
         bump
     )]
-    pub pool: Account<'info, PoolConfig>,
+    pub pool: Box<Account<'info, PoolConfig>>,
 
     #[account(
         init,
@@ -191,7 +207,7 @@ pub struct Initialize<'info> {
         associated_token::mint = mint,
         associated_token::authority = pool
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: treasury owner wallet that receives fee ATAs
     pub treasury: UncheckedAccount<'info>,
@@ -202,7 +218,7 @@ pub struct Initialize<'info> {
         associated_token::mint = mint,
         associated_token::authority = treasury
     )]
-    pub treasury_token: Account<'info, TokenAccount>,
+    pub treasury_token: Box<Account<'info, TokenAccount>>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -221,21 +237,21 @@ pub struct Deposit<'info> {
         seeds = [b"pool", pool.mint.as_ref()],
         bump = pool.bump
     )]
-    pub pool: Account<'info, PoolConfig>,
+    pub pool: Box<Account<'info, PoolConfig>>,
 
     #[account(
         mut,
         address = pool.vault,
         constraint = vault.mint == pool.mint @ GhostError::MintMismatch
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = depositor_token.owner == depositor.key() @ GhostError::OwnerMismatch,
         constraint = depositor_token.mint == pool.mint @ GhostError::MintMismatch
     )]
-    pub depositor_token: Account<'info, TokenAccount>,
+    pub depositor_token: Box<Account<'info, TokenAccount>>,
 
     #[account(
         init,
@@ -244,7 +260,17 @@ pub struct Deposit<'info> {
         seeds = [b"commitment", commitment.as_ref()],
         bump
     )]
-    pub commitment_record: Account<'info, CommitmentRecord>,
+    pub commitment_record: Box<Account<'info, CommitmentRecord>>,
+
+    /// Sequential leaf so relayers can enumerate the tree from chain.
+    #[account(
+        init,
+        payer = depositor,
+        space = 8 + LeafRecord::INIT_SPACE,
+        seeds = [b"leaf", pool.mint.as_ref(), &pool.next_index.to_le_bytes()],
+        bump
+    )]
+    pub leaf_record: Box<Account<'info, LeafRecord>>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -261,14 +287,14 @@ pub struct Withdraw<'info> {
         seeds = [b"pool", pool.mint.as_ref()],
         bump = pool.bump
     )]
-    pub pool: Account<'info, PoolConfig>,
+    pub pool: Box<Account<'info, PoolConfig>>,
 
     #[account(
         mut,
         address = pool.vault,
         constraint = vault.mint == pool.mint @ GhostError::MintMismatch
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: arbitrary withdraw destination
     pub recipient: UncheckedAccount<'info>,
@@ -278,13 +304,10 @@ pub struct Withdraw<'info> {
         constraint = recipient_token.owner == recipient.key() @ GhostError::OwnerMismatch,
         constraint = recipient_token.mint == pool.mint @ GhostError::MintMismatch
     )]
-    pub recipient_token: Account<'info, TokenAccount>,
+    pub recipient_token: Box<Account<'info, TokenAccount>>,
 
-    #[account(
-        mut,
-        address = pool.treasury
-    )]
-    /// CHECK: treasury wallet stored on pool
+    #[account(address = pool.treasury)]
+    /// CHECK: treasury wallet stored on pool; only the token ATA is mutated
     pub treasury: UncheckedAccount<'info>,
 
     #[account(
@@ -292,7 +315,7 @@ pub struct Withdraw<'info> {
         constraint = treasury_token.owner == treasury.key() @ GhostError::OwnerMismatch,
         constraint = treasury_token.mint == pool.mint @ GhostError::MintMismatch
     )]
-    pub treasury_token: Account<'info, TokenAccount>,
+    pub treasury_token: Box<Account<'info, TokenAccount>>,
 
     #[account(
         init,
@@ -301,7 +324,7 @@ pub struct Withdraw<'info> {
         seeds = [b"nullifier", nullifier.as_ref()],
         bump
     )]
-    pub nullifier_record: Account<'info, NullifierRecord>,
+    pub nullifier_record: Box<Account<'info, NullifierRecord>>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -317,7 +340,7 @@ pub struct SetRelayer<'info> {
         bump = pool.bump,
         has_one = authority @ GhostError::UnauthorizedAuthority
     )]
-    pub pool: Account<'info, PoolConfig>,
+    pub pool: Box<Account<'info, PoolConfig>>,
 }
 
 #[account]
@@ -338,6 +361,16 @@ pub struct PoolConfig {
 #[account]
 #[derive(InitSpace)]
 pub struct CommitmentRecord {
+    pub commitment: [u8; 32],
+    pub leaf_index: u32,
+    pub bump: u8,
+}
+
+/// Leaf at a sequential index. Lets an honest relayer rebuild the Merkle
+/// tree from chain without trusting client-submitted deposits.
+#[account]
+#[derive(InitSpace)]
+pub struct LeafRecord {
     pub commitment: [u8; 32],
     pub leaf_index: u32,
     pub bump: u8,
