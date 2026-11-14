@@ -78,15 +78,24 @@ npm test
 npm run test:anchor
 ```
 
-Devnet/testnet RPC `requestAirdrop` returns **410 faucet closed**. Localnet airdrops still work. [faucet.solana.com](https://faucet.solana.com) currently requires a GitHub login (and tells AI agents not to use it). If you can get test SOL in a throwaway wallet:
+## Devnet (live)
 
-```bash
-RPC_URL=https://api.devnet.solana.com npm run fund:relayer
-```
+Program, mock USDC, and pool are on **Solana Devnet**. `pool.relayer` is the hosted fee-payer `EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf`.
 
-that sends ~1.5 SOL to `EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf`.
+| | |
+|---|---|
+| Program | [`69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR`](https://explorer.solana.com/address/69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR?cluster=devnet) |
+| Mock USDC | [`GLfrBSjkzFQZJrWEcWfA9j1yapabGYTwdcNJKAgqWeCt`](https://explorer.solana.com/address/GLfrBSjkzFQZJrWEcWfA9j1yapabGYTwdcNJKAgqWeCt?cluster=devnet) |
+| Pool | [`DbMcqri6ScZSnQBpDATapaWWUfUGTiytyMuzZrZKpZCr`](https://explorer.solana.com/address/DbMcqri6ScZSnQBpDATapaWWUfUGTiytyMuzZrZKpZCr?cluster=devnet) |
+| Deploy | [`2SeaHtd…31HX`](https://explorer.solana.com/tx/2SeaHtdSivBHkkZGcdw3hi6DbCCTygmHGzkqrL4CkBaGvBg2q15Fa3DssoSSWhVUyavM26kSUdbKAuyNMYxX31HX?cluster=devnet) |
+| Deposit | [`9YbP8qm…w2Dz`](https://explorer.solana.com/tx/9YbP8qmVaZErFVo3QZpL88bEgYFf5BXosUHjUzGZbuUWzSAofvNLvoUDeUoYqbiFUd6omkAu9c17tB4bTRZw2Dz?cluster=devnet) |
+| Gasless withdraw | [`5TyWpPb…HFsU`](https://explorer.solana.com/tx/5TyWpPbxk9PED7NnCECALQ416YzryUfNrtNoZ7PcMRuPxbDWHcdHWi83AH5jH6DoMA1Pg2PtDAmJpF6QNxkZHFsU?cluster=devnet) |
 
-## Devnet / testnet
+`KEEP_LOCAL_RELAYER=1 AUTHORITY_KEYPAIR_PATH=… npm run test:e2e:devnet` redeploys/mints as needed. After a local demo key is used for withdraws, restore the host key with `npm run set:relayer`.
+
+**Testnet:** `solana airdrop` failed (faucet closed / rate limited). Not deployed.
+
+## Devnet / testnet (from scratch)
 
 Never mainnet. Use a throwaway keypair with **test SOL only**.
 

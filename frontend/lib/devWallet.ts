@@ -46,10 +46,15 @@ export class GhostDevWalletAdapter extends BaseMessageSignerWalletAdapter {
   supportedTransactionVersions: ReadonlySet<TransactionVersion> = new Set(["legacy", 0]);
 
   private _keypair: Keypair | null = null;
-  private _readyState: WalletReadyState =
-    typeof window !== "undefined" && keypairFromInjected()
-      ? WalletReadyState.Installed
-      : WalletReadyState.NotDetected;
+  private _readyState: WalletReadyState = WalletReadyState.NotDetected;
+
+  constructor() {
+    super();
+    if (typeof window !== "undefined" && keypairFromInjected()) {
+      this._readyState = WalletReadyState.Installed;
+      queueMicrotask(() => this.emit("readyStateChange", WalletReadyState.Installed));
+    }
+  }
 
   get publicKey() {
     return this._keypair?.publicKey ?? null;
@@ -60,6 +65,9 @@ export class GhostDevWalletAdapter extends BaseMessageSignerWalletAdapter {
   }
 
   get readyState() {
+    if (typeof window !== "undefined" && keypairFromInjected()) {
+      return WalletReadyState.Installed;
+    }
     return this._readyState;
   }
 
@@ -71,6 +79,7 @@ export class GhostDevWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._keypair = kp;
     this._readyState = WalletReadyState.Installed;
     this.emit("connect", kp.publicKey);
+    console.log("[ghost] adapter connected", kp.publicKey.toBase58());
   }
 
   async disconnect() {

@@ -7,13 +7,32 @@
   "devnet": {
     "programId": "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR",
     "relayer": "EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf",
-    "usdcMint": "",
-    "pool": "",
-    "deployTx": "",
-    "depositTx": "",
-    "withdrawTx": "",
-    "relayerFundTx": "",
-    "note": "Not deployed from this PR: public RPC requestAirdrop returns 410 (faucet closed); faucet.solana.com requires GitHub login. Localnet e2e succeeded."
+    "usdcMint": "GLfrBSjkzFQZJrWEcWfA9j1yapabGYTwdcNJKAgqWeCt",
+    "pool": "DbMcqri6ScZSnQBpDATapaWWUfUGTiytyMuzZrZKpZCr",
+    "vault": "GDhkKy7KupmP9w24XhinatErS8R6ejea95brgKX2z9uR",
+    "treasury": "4vpCBg6vdBZTDGKMSSv8SHBQfLjzzgL1eKEXysqabDrV",
+    "operator": "4vpCBg6vdBZTDGKMSSv8SHBQfLjzzgL1eKEXysqabDrV",
+    "deployTx": "2SeaHtdSivBHkkZGcdw3hi6DbCCTygmHGzkqrL4CkBaGvBg2q15Fa3DssoSSWhVUyavM26kSUdbKAuyNMYxX31HX",
+    "initTx": "5nyLvumovxNCqLEjqqo6ES3WapB6AFyZi5MqgBgP5UTy7BNZ7i4ZxxA1nNy9fxoiMV5rFZtT3RrtHuf34tqUxFa9",
+    "depositTx": "9YbP8qmVaZErFVo3QZpL88bEgYFf5BXosUHjUzGZbuUWzSAofvNLvoUDeUoYqbiFUd6omkAu9c17tB4bTRZw2Dz",
+    "withdrawTx": "5TyWpPbxk9PED7NnCECALQ416YzryUfNrtNoZ7PcMRuPxbDWHcdHWi83AH5jH6DoMA1Pg2PtDAmJpF6QNxkZHFsU",
+    "setRelayerHostedTx": "NgPTJEewawZWPF3aRPExAbZBhNMrFZXxi11nSXCf4BFe8ECpLBHC6GJXoY9JynrTiDRArMLP2G8e61stKUKW4qm",
+    "uiDepositTx": "hhpGJ73UU2Nj4SMyPevcGS8PMamC7CvJf6WbUXDTuve1vH9p5Jwp7jVbgmkVsLGWodRKN1PkMvD1wqjmztTvQbC",
+    "uiWithdrawTx": "5uWUc9DXn1bURdDAZzSoqNN3x5zpdsgwiAmxMin8867Vv6uvKGhKWaCTg5NE6RFVBmcGxeHhxcWYhFND86iitYWp",
+    "recipient": "2g9qkNZGadAd4kZKd7LW4irKfpTWbrkPAQKnPoVT3cNV",
+    "explorer": {
+      "program": "https://explorer.solana.com/address/69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR?cluster=devnet",
+      "mint": "https://explorer.solana.com/address/GLfrBSjkzFQZJrWEcWfA9j1yapabGYTwdcNJKAgqWeCt?cluster=devnet",
+      "pool": "https://explorer.solana.com/address/DbMcqri6ScZSnQBpDATapaWWUfUGTiytyMuzZrZKpZCr?cluster=devnet",
+      "deploy": "https://explorer.solana.com/tx/2SeaHtdSivBHkkZGcdw3hi6DbCCTygmHGzkqrL4CkBaGvBg2q15Fa3DssoSSWhVUyavM26kSUdbKAuyNMYxX31HX?cluster=devnet",
+      "init": "https://explorer.solana.com/tx/5nyLvumovxNCqLEjqqo6ES3WapB6AFyZi5MqgBgP5UTy7BNZ7i4ZxxA1nNy9fxoiMV5rFZtT3RrtHuf34tqUxFa9?cluster=devnet",
+      "deposit": "https://explorer.solana.com/tx/9YbP8qmVaZErFVo3QZpL88bEgYFf5BXosUHjUzGZbuUWzSAofvNLvoUDeUoYqbiFUd6omkAu9c17tB4bTRZw2Dz?cluster=devnet",
+      "withdraw": "https://explorer.solana.com/tx/5TyWpPbxk9PED7NnCECALQ416YzryUfNrtNoZ7PcMRuPxbDWHcdHWi83AH5jH6DoMA1Pg2PtDAmJpF6QNxkZHFsU?cluster=devnet",
+      "uiDeposit": "https://explorer.solana.com/tx/hhpGJ73UU2Nj4SMyPevcGS8PMamC7CvJf6WbUXDTuve1vH9p5Jwp7jVbgmkVsLGWodRKN1PkMvD1wqjmztTvQbC?cluster=devnet",
+      "uiWithdraw": "https://explorer.solana.com/tx/5uWUc9DXn1bURdDAZzSoqNN3x5zpdsgwiAmxMin8867Vv6uvKGhKWaCTg5NE6RFVBmcGxeHhxcWYhFND86iitYWp?cluster=devnet",
+      "setRelayerHosted": "https://explorer.solana.com/tx/NgPTJEewawZWPF3aRPExAbZBhNMrFZXxi11nSXCf4BFe8ECpLBHC6GJXoY9JynrTiDRArMLP2G8e61stKUKW4qm?cluster=devnet"
+    },
+    "note": "pool.relayer is the hosted fee-payer EWpDhR9kvBtPSwhiGbqarjxsy97nJSE784HjzkQ9Lsxf. Demo withdraws used a local throwaway fee-payer via set_relayer, then rotated back."
   },
   "testnet": {
     "programId": "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR",
@@ -22,6 +41,6 @@
     "deployTx": "",
     "depositTx": "",
     "withdrawTx": "",
-    "note": "Same faucet blockage as Devnet. Not deployed from this PR."
+    "note": "solana airdrop on testnet failed (faucet closed / rate limited). Operator has 0 testnet SOL. Not deployed."
   }
 }
