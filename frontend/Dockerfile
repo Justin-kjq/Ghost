@@ -5,14 +5,21 @@ COPY frontend/package.json frontend/
 COPY sdk/package.json sdk/
 COPY relayer/package.json relayer/
 COPY circuits/package.json circuits/
-RUN npm ci
+# Workspace packages can nest unhoisted modules (e.g. frontend/@types/node@22
+# vs a hoisted @types/node@12). Keep those dirs even if a given ci is fully hoisted.
+RUN npm ci \
+  && mkdir -p frontend/node_modules sdk/node_modules
 
-FROM node:22-bookworm-slim AS builder
+FROM deps AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json package-lock.json ./
 COPY sdk ./sdk
 COPY frontend ./frontend
+# Build context omits **/node_modules (.dockerignore). Overlaying `frontend/`
+# (and `sdk/`) drops the workspace node_modules npm ci just created. Next then
+# loads next.config.ts against the hoisted @types/node@12 and fails with
+# Cannot find module 'node:path'. Restore the workspace installs after source.
+COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
+COPY --from=deps /app/sdk/node_modules ./sdk/node_modules
 
 # PUBLIC BUILD-TIME — must be present at `next build`
 ARG NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com

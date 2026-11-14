@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const frontendDir = path.dirname(fileURLToPath(import.meta.url));
 
