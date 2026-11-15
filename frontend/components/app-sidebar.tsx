@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  LayoutDashboard,
-  Notebook,
-  Settings,
-  Activity,
-} from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Notebook } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,49 +14,41 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { GhostWordmark } from "@/components/ghost-mark";
+import { Wordmark } from "@/components/landing/marks";
 import { WalletChip } from "@/components/wallet-chip";
-import { CLUSTER } from "@/lib/config";
 
 const items = [
-  { href: "/app", label: "Overview", icon: LayoutDashboard },
   { href: "/app/deposit", label: "Deposit", icon: ArrowDownToLine },
   { href: "/app/withdraw", label: "Withdraw", icon: ArrowUpFromLine },
   { href: "/app/notes", label: "Notes", icon: Notebook },
-  { href: "/app/activity", label: "Activity", icon: Activity },
-  { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
   return (
-    <Sidebar collapsible="offcanvas">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Link href="/" className="hover:opacity-80">
-          <GhostWordmark markClassName="size-7" />
+    <Sidebar collapsible="offcanvas" className="border-r border-cream/10">
+      <SidebarHeader className="border-b border-cream/10 px-4 py-5">
+        <Link href="/" className="w-fit text-cream [--eye:#000]">
+          <span className="inline-flex bg-black px-[12px] py-[8px]">
+            <Wordmark className="text-[18px]" />
+          </span>
         </Link>
-        <p className="mt-2 font-mono text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
-          {CLUSTER} · test funds
-        </p>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1 px-1">
               {items.map((item) => {
-                const active =
-                  item.href === "/app"
-                    ? pathname === "/app"
-                    : pathname.startsWith(item.href);
+                const active = pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
                       isActive={active}
-                      className="data-[active=true]:bg-foreground data-[active=true]:text-background"
+                      className="h-10 rounded-none text-[15px] data-[active=true]:bg-sun data-[active=true]:font-medium data-[active=true]:text-ink"
                     >
                       <Link href={item.href}>
-                        <item.icon />
+                        <item.icon className="size-4" />
                         <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -74,7 +59,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="px-3 py-4">
+      <SidebarFooter className="border-t border-cream/10 px-3 py-4">
         <WalletChip compact />
       </SidebarFooter>
     </Sidebar>

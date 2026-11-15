@@ -4,7 +4,7 @@ export const GITHUB_REPO = "https://github.com/Arnab-Afk/Ghost";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://ghost.arnabbhowmik.in";
 
-/** Known Devnet deployment (see deployments.json). Used as explorer fallbacks. */
+/** Known deployment fallbacks (see deployments.json). Used for explorer links. */
 export const DEVNET = {
   program: "69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR",
   mint: "GLfrBSjkzFQZJrWEcWfA9j1yapabGYTwdcNJKAgqWeCt",

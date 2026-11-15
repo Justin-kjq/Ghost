@@ -1,24 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useGhostWallet } from "@/hooks/useGhostWallet";
 import { CLUSTER } from "@/lib/config";
 import { recordActivity, explorerTx } from "@/lib/activity";
 import { depositUsdc } from "@/lib/ghost";
 import { saveNote } from "@/lib/notes";
-import { PoolSidePanel } from "@/components/pool-side-panel";
+import { PageHeader } from "@/components/page-header";
 
 export default function DepositPage() {
-  const wallet = useWallet();
+  const { publicKey, signTransaction, anchorWallet } = useGhostWallet();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [tx, setTx] = useState("");
 
   async function onDeposit() {
-    if (!wallet.publicKey || !wallet.signTransaction) {
+    if (!publicKey || !signTransaction || !anchorWallet) {
       toast.error("Connect a wallet first.");
       return;
     }
@@ -27,7 +26,7 @@ export default function DepositPage() {
     setTx("");
     try {
       toast.message("Creating commitment and depositing 1 USDC…");
-      const result = await depositUsdc(wallet as any);
+      const result = await depositUsdc(anchorWallet as any);
       saveNote({
         note: result.note,
         leafIndex: result.leafIndex,
@@ -53,92 +52,66 @@ export default function DepositPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-[11px] tracking-[0.18em] text-gold uppercase">Deposit</p>
-        <h1 className="mt-1 font-serif text-4xl tracking-tight">One USDC. One leaf.</h1>
-        <p className="prose-muted mt-3">
-          The pool denomination is fixed at 1 USDC. You will receive a Ghost Note —
-          treat it as a private key.
-        </p>
-      </div>
+    <div className="mx-auto max-w-xl space-y-10">
+      <PageHeader
+        tag="Deposit"
+        title="One USDC. One leaf."
+        description="Deposit 1 USDC and receive a Ghost Note — treat it as a private key."
+      />
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.85fr)]">
-        <div className="space-y-6">
-          <Card className="shadow-none">
-            <CardHeader>
-              <CardTitle className="font-serif">Amount</CardTitle>
-              <CardDescription>Fixed by the on-chain pool config.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-baseline justify-between rounded-lg border border-hairline px-4 py-3">
-                <span className="text-sm text-muted-foreground">Deposit</span>
-                <span className="font-serif text-2xl">1.00 USDC</span>
-              </div>
-              <Button
-                size="pill"
-                className="w-full"
-                disabled={busy}
-                onClick={onDeposit}
-                data-testid="deposit-submit"
-              >
-                {busy ? "Depositing…" : "Deposit 1 USDC"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {note && (
-            <Card className="border-gold/40 shadow-none" data-testid="deposit-note">
-              <CardHeader>
-                <CardTitle className="font-serif">Save your Ghost Note</CardTitle>
-                <CardDescription>
-                  Anyone with this string can withdraw. It is also stored in this
-                  browser under Notes.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="font-mono text-xs leading-relaxed break-all">{note}</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    void navigator.clipboard.writeText(note);
-                    toast.success("Note copied.");
-                  }}
-                >
-                  Copy note
-                </Button>
-                {tx && (
-                  <p className="font-mono text-xs">
-                    Tx:{" "}
-                    <a
-                      className="underline"
-                      href={explorerTx(tx, CLUSTER)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {tx}
-                    </a>
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
+      <section className="border border-ink/15 bg-paper p-6 md:p-8">
+        <div className="flex items-baseline justify-between border border-ink/15 bg-cream px-4 py-4">
+          <span className="t-14 text-ink/55">Amount</span>
+          <span className="t-28">1.00 USDC</span>
         </div>
+        <Button
+          size="pill"
+          className="mt-6 w-full"
+          disabled={busy}
+          onClick={onDeposit}
+          data-testid="deposit-submit"
+        >
+          {busy ? "Depositing…" : "Deposit 1 USDC"}
+        </Button>
+      </section>
 
-        <PoolSidePanel>
-          <div>
-            <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
-              Before you deposit
-            </p>
-            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li>You need Devnet SOL for the deposit transaction.</li>
-              <li>The mint is mock USDC, not Circle&apos;s token.</li>
-              <li>Export the Ghost Note before clearing this browser.</li>
-            </ul>
+      {note && (
+        <section
+          className="border border-ink/15 border-l-4 border-l-sun bg-sun/30 p-6 md:p-8"
+          data-testid="deposit-note"
+        >
+          <span className="tag">Save your Ghost Note</span>
+          <p className="t-14 mt-3 font-normal text-ink/65">
+            Anyone with this string can withdraw. It is also stored under Notes.
+          </p>
+          <p className="mt-5 break-all font-mono text-xs leading-relaxed">{note}</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                void navigator.clipboard.writeText(note);
+                toast.success("Note copied.");
+              }}
+            >
+              Copy note
+            </Button>
           </div>
-        </PoolSidePanel>
-      </div>
+          {tx && (
+            <p className="mt-4 font-mono text-xs">
+              Tx:{" "}
+              <a
+                className="underline"
+                href={explorerTx(tx, CLUSTER)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {tx}
+              </a>
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }
