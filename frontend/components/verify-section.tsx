@@ -68,8 +68,8 @@ export function VerifySection({ stats }: { stats: PoolLiveStats }) {
     },
     {
       icon: FileWarning,
-      t: "Unaudited — Devnet MVP",
-      d: "No audit. No mainnet. Test funds only. Nullifier PDAs still stop the same note being spent twice.",
+      t: "Unaudited MVP",
+      d: "No audit yet. Nullifier PDAs still stop the same note being spent twice.",
     },
   ];
 
@@ -80,14 +80,14 @@ export function VerifySection({ stats }: { stats: PoolLiveStats }) {
         Don&apos;t take our word. Check the chain.
       </h2>
       <p className="prose-muted mt-5">
-        Every deposit writes a commitment and a sequential leaf on Solana Devnet. Explorer
-        links below open the live accounts.
+        Every deposit writes a commitment and a sequential leaf on Solana. Explorer links below
+        open the live accounts.
       </p>
 
       <div className="mt-10 rounded-2xl border border-hairline bg-card/60 px-5 sm:px-6">
         <AddrRow label="Program" value={program} />
         <AddrRow label="Pool" value={pool} />
-        <AddrRow label="Mint (mock USDC)" value={mint} />
+        <AddrRow label="Mint (USDC)" value={mint} />
         <AddrRow label="Vault" value={vault} />
       </div>
 

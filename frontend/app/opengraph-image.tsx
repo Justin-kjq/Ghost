@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Ghost — private USDC on Solana Devnet";
+export const alt = "Ghost — private USDC on Solana";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -51,7 +51,7 @@ export default function OpengraphImage() {
               color: "#5A544E",
             }}
           >
-            Shielded USDC on Solana Devnet. Unaudited MVP. Test funds only.
+            Shielded USDC on Solana.
           </div>
         </div>
       </div>

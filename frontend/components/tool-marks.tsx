@@ -54,12 +54,16 @@ export function BuiltWithStrip() {
               <path d="M9.2 12.8c.4 1.6 1.6 2.4 3.2 2.4 1.8 0 3-1.1 3-3.2S14.2 8.8 12.4 8.8c-1.4 0-2.5.6-3 1.8" strokeLinecap="round" />
             </svg>
           </Mark>
-          <Mark label="Phantom">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M5 10.2C5 6.4 8.1 4 12 4s7 2.4 7 6.2v7.1c0 .7-.8 1.1-1.4.7l-2.1-1.4-2.1 2.2c-.3.3-.8.3-1.1 0l-2-2.2-2.2 1.4c-.6.4-1.4 0-1.4-.7V10.2Z" />
+          <Mark label="WalletConnect">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <path
+                d="M7.2 9.2c2.6-2.6 6.9-2.6 9.6 0l.3.3a.4.4 0 0 1 0 .6l-1.1 1.1a.3.3 0 0 1-.4 0l-.4-.4a4.4 4.4 0 0 0-6.2 0l-.5.4a.3.3 0 0 1-.4 0L6.9 10a.4.4 0 0 1 0-.6l.3-.2Zm11.9 2.2 1 1a.4.4 0 0 1 0 .6l-4.4 4.4a.4.4 0 0 1-.6 0l-3.1-3.1a.2.2 0 0 0-.3 0l-3.1 3.1a.4.4 0 0 1-.6 0L3.6 13a.4.4 0 0 1 0-.6l1-1a.4.4 0 0 1 .6 0l3.1 3.1a.2.2 0 0 0 .3 0l3.1-3.1a.4.4 0 0 1 .6 0l3.1 3.1a.2.2 0 0 0 .3 0l3.1-3.1a.4.4 0 0 1 .6 0Z"
+                fill="currentColor"
+                stroke="none"
+              />
             </svg>
           </Mark>
-          <Mark label="Devnet">
+          <Mark label="Solana">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
               <circle cx="12" cy="12" r="8.2" />
               <path d="M4.5 12h15M12 3.8c2.4 2.4 3.6 5.2 3.6 8.2S14.4 17.8 12 20.2C9.6 17.8 8.4 15 8.4 12S9.6 6.2 12 3.8Z" />

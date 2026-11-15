@@ -34,9 +34,8 @@ export function SiteFooter() {
           </div>
         </div>
         <p className="max-w-[70ch] text-sm leading-relaxed text-muted-foreground">
-          Devnet only. Never mainnet. Not financial advice. Ghost is an unaudited Lean MVP:
-          Groth16 is verified off-chain, and a malicious relayer can drain the vault. Use test
-          funds.
+          Not financial advice. Ghost is an unaudited Lean MVP: Groth16 is verified off-chain,
+          and a malicious relayer can drain the vault.
         </p>
       </div>
     </footer>

@@ -18,15 +18,15 @@ const items = [
   },
   {
     q: "Is this trustless?",
-    a: "Not yet. Groth16 and the Merkle tree are verified off-chain. A malicious relayer can drain the vault. Nullifier PDAs still stop the same note being spent twice. Treat this as a Devnet demo.",
+    a: "Not yet. Groth16 and the Merkle tree are verified off-chain. A malicious relayer can drain the vault. Nullifier PDAs still stop the same note being spent twice.",
   },
   {
     q: "What is the denomination?",
     a: "Exactly 1 USDC per note (1,000,000 base units). The pool fee is 30 bps, so the recipient receives 0.997 USDC.",
   },
   {
-    q: "Which cluster is this?",
-    a: "Solana Devnet. Program id 69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR. There is no mainnet deployment.",
+    q: "Which network is this?",
+    a: "Solana. Program id 69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR.",
   },
 ];
 

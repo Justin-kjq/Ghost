@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
+import {
+  Instrument_Sans,
+  Instrument_Serif,
+  Inter,
+  JetBrains_Mono,
+} from "next/font/google";
 import { Providers } from "@/components/providers";
 import { SITE_URL } from "@/lib/addresses";
 import "./globals.css";
@@ -16,6 +21,12 @@ const sans = Inter({
   variable: "--font-sans",
 });
 
+const instrument = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-instrument",
+  axes: ["wdth"],
+});
+
 const mono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
@@ -28,7 +39,7 @@ export const metadata: Metadata = {
     template: "%s · Ghost",
   },
   description:
-    "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Proofs stay in the browser. Unaudited MVP — test funds only.",
+    "Shielded USDC deposits and gasless private withdrawals on Solana. Proofs stay in the browser.",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -36,13 +47,13 @@ export const metadata: Metadata = {
     siteName: "Ghost",
     title: "Ghost — Private USDC on Solana",
     description:
-      "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Unaudited MVP — test funds only.",
+      "Shielded USDC deposits and gasless private withdrawals on Solana.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Ghost — Private USDC on Solana",
     description:
-      "Shielded USDC deposits and gasless private withdrawals on Solana Devnet. Unaudited MVP — test funds only.",
+      "Shielded USDC deposits and gasless private withdrawals on Solana.",
   },
 };
 
@@ -52,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${serif.variable} ${sans.variable} ${mono.variable} min-h-screen`}
+        className={`${serif.variable} ${sans.variable} ${instrument.variable} ${mono.variable} min-h-screen`}
       >
         <Providers>{children}</Providers>
       </body>

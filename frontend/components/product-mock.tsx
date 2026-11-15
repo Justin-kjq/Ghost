@@ -5,7 +5,7 @@ export function ProductMock({ stats }: { stats: PoolLiveStats }) {
   const deposits = stats.deposits != null ? String(stats.deposits) : "—";
   return (
     <div className="rounded-2xl border border-hairline/80 bg-background/90 p-5 shadow-[0_24px_60px_-28px_rgba(22,20,18,0.45)] backdrop-blur-md">
-      <p className="text-[11px] tracking-[0.18em] text-gold uppercase">Pool · Devnet</p>
+      <p className="text-[11px] tracking-[0.18em] text-gold uppercase">Pool · Solana</p>
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div>
           <p className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">TVL</p>
