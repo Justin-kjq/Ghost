@@ -1,114 +1,98 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { PhantomWalletName } from "@solana/wallet-adapter-phantom";
-import { CircleHelp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useGhostWallet } from "@/hooks/useGhostWallet";
 import { ENABLE_DEV_WALLET } from "@/lib/config";
-import { GhostDevWalletName } from "@/lib/devWallet";
-import { GhostWordmark } from "@/components/ghost-mark";
+import { Wordmark, TurnArrow } from "@/components/landing/marks";
+import { FlowDiagram } from "@/components/landing/FlowDiagram";
 import { GITHUB_REPO } from "@/lib/addresses";
 
-type Kind = "phantom" | "dev";
+type Kind = "wallet" | "dev";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { connected, connecting, connect, select, wallet } = useWallet();
+  const { connected, connecting, connect, connectDevWallet } = useGhostWallet();
   const [busy, setBusy] = useState<Kind | null>(null);
   const [error, setError] = useState("");
-  const pending = useRef<Kind | null>(null);
 
   useEffect(() => {
     if (connected) router.replace("/app");
   }, [connected, router]);
 
-  useEffect(() => {
-    const kind = pending.current;
-    if (!kind || !wallet) return;
-    const expected = kind === "dev" ? GhostDevWalletName : PhantomWalletName;
-    if (wallet.adapter.name !== expected) return;
-    pending.current = null;
-    const t = window.setTimeout(() => {
-      connect()
-        .catch((e: unknown) => {
-          setError(e instanceof Error ? e.message : String(e));
-        })
-        .finally(() => setBusy(null));
-    }, 200);
-    return () => window.clearTimeout(t);
-  }, [wallet, connect]);
-
-  function connectNamed(
-    name: typeof PhantomWalletName | typeof GhostDevWalletName,
-    kind: Kind,
-  ) {
+  async function onConnectWallet() {
     setError("");
-    setBusy(kind);
-    pending.current = kind;
-    if (wallet?.adapter.name === name) {
-      pending.current = null;
-      window.setTimeout(() => {
-        connect()
-          .catch((e: unknown) => {
-            setError(e instanceof Error ? e.message : String(e));
-          })
-          .finally(() => setBusy(null));
-      }, 200);
-      return;
+    setBusy("wallet");
+    try {
+      await connect();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
     }
-    select(name);
+  }
+
+  async function onConnectDev() {
+    setError("");
+    setBusy("dev");
+    try {
+      await connectDevWallet();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
-    <div className="grid min-h-screen bg-login-canvas lg:grid-cols-2">
-      <div className="flex flex-col justify-between px-8 py-8 text-login-text sm:px-14 sm:py-10">
+    <div className="landing-root grid min-h-screen lg:grid-cols-2">
+      <div className="flex flex-col justify-between bg-paper px-6 py-8 text-ink sm:px-12 sm:py-10">
         <Link href="/" className="w-fit">
-          <GhostWordmark inverted markClassName="size-8" />
+          <Wordmark className="text-[22px] [--eye:var(--paper)]" />
         </Link>
 
-        <div className="mx-auto w-full max-w-sm py-16">
-          <h1 className="font-serif text-4xl tracking-tight">Welcome back.</h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-login-text/65">
-            There is no password. Connect a wallet to deposit and withdraw shielded
-            USDC on Devnet.
+        <div className="mx-auto w-full max-w-[420px] py-16">
+          <span className="tag">Connect</span>
+          <h1 className="t-48 mt-6">Welcome back.</h1>
+          <p className="t-16 mt-4 font-normal leading-[1.5] text-ink/65">
+            There is no password. Connect any Solana wallet (Phantom, Solflare,
+            WalletConnect, and more) to deposit and withdraw shielded USDC.
           </p>
 
-          <div className="mt-8 space-y-3">
-            <Button
-              size="pill"
-              className="h-12 w-full bg-login-text text-login-canvas hover:bg-login-text/90"
-              disabled={connecting || busy !== null}
+          <div className="mt-10 space-y-3">
+            <button
+              type="button"
               data-testid="connect-wallet"
-              onClick={() => connectNamed(PhantomWalletName, "phantom")}
+              disabled={connecting || busy !== null}
+              onClick={onConnectWallet}
+              className="group inline-flex h-12 w-full items-center justify-center gap-[10px] bg-ink px-[18px] text-[18px] leading-none tracking-[-0.01em] text-cream disabled:opacity-50"
             >
-              {busy === "phantom" ? "Connecting…" : "Connect wallet"}
-            </Button>
+              {busy === "wallet" ? "Connecting…" : "Connect wallet"}
+              <TurnArrow className="h-[14px] w-[14px] transition-transform group-hover:translate-x-[3px]" />
+            </button>
             {ENABLE_DEV_WALLET && (
-              <Button
-                size="pill"
-                variant="outline"
-                className="h-12 w-full rounded-full border-login-text/20 bg-transparent text-login-text hover:bg-login-text/10"
-                disabled={connecting || busy !== null}
+              <button
+                type="button"
                 data-testid="use-dev-wallet"
-                onClick={() => connectNamed(GhostDevWalletName, "dev")}
+                disabled={connecting || busy !== null}
+                onClick={onConnectDev}
+                className="inline-flex h-12 w-full items-center justify-center border border-ink/15 bg-transparent px-[18px] text-[16px] text-ink hover:bg-sand disabled:opacity-50"
               >
                 {busy === "dev" ? "Connecting…" : "Use dev wallet"}
-              </Button>
+              </button>
             )}
           </div>
 
           {error && (
-            <p className="mt-4 text-sm text-red-300" role="alert">
+            <p className="mt-4 text-sm text-destructive" role="alert">
               {error}
             </p>
           )}
 
-          <p className="mt-10 text-xs leading-relaxed text-login-text/45">
-            Devnet only. Unaudited. Ghost never holds your note.
+          <p className="t-14 mt-10 font-normal text-ink/45">
+            Powered by Reown AppKit / WalletConnect. Unaudited. Ghost never holds
+            your note.
           </p>
         </div>
 
@@ -116,22 +100,34 @@ export default function LoginPage() {
           href={GITHUB_REPO}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 text-xs text-login-text/45 hover:text-login-text"
+          className="t-14 font-normal text-ink/45 hover:text-ink"
         >
-          <CircleHelp className="size-3.5" />
           Get help on GitHub
         </a>
       </div>
 
-      <div className="relative hidden min-h-screen overflow-hidden bg-login-canvas lg:block">
-        <Image
-          src="/art/login-columns.webp"
-          alt="Stippled classical columns"
-          fill
-          priority
-          className="object-cover object-center"
-          sizes="50vw"
-        />
+      <div className="relative hidden min-h-screen overflow-hidden bg-night text-cream lg:block">
+        <div className="absolute inset-0 flex flex-col justify-between p-10">
+          <p className="t-16 max-w-[280px]">
+            Your private, gasless
+            <br />
+            stablecoin rail
+          </p>
+          <div className="overflow-hidden">
+            <FlowDiagram className="h-auto w-full min-w-[640px] opacity-95" />
+          </div>
+          <ul className="max-w-[300px]">
+            {[
+              "0 SOL in the recipient wallet",
+              "Proof in about five seconds",
+              "Live on Solana",
+            ].map((t) => (
+              <li key={t} className="t-14 border-t border-cream/20 py-3">
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );

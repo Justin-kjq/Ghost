@@ -128,8 +128,11 @@ npm run relayer    # :3001  GET /health
 npm run frontend   # :3000
 ```
 
-Phantom on Devnet, or (demos only) `NEXT_PUBLIC_ENABLE_DEV_WALLET=true` plus
-`window.__GHOST_DEV_WALLET__` = a 64-byte JSON array injected at runtime.
+Connect any Solana wallet via **Reown AppKit / WalletConnect** (Phantom, Solflare,
+QR wallets, and more). Set `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` from
+[dashboard.reown.com](https://dashboard.reown.com) (the built-in demo id only
+works on localhost). For headless demos only: `NEXT_PUBLIC_ENABLE_DEV_WALLET=true`
+plus `window.__GHOST_DEV_WALLET__` = a 64-byte JSON array injected at runtime.
 Never put a secret in `NEXT_PUBLIC_*`.
 
 ## Hosting (Docker)

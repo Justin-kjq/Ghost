@@ -8,7 +8,11 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.join(frontendDir, ".."),
   reactStrictMode: true,
-  transpilePackages: ["@ghost/sdk"],
+  transpilePackages: [
+    "@ghost/sdk",
+    "@reown/appkit",
+    "@reown/appkit-adapter-solana",
+  ],
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

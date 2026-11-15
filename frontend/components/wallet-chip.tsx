@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useConnection } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync, getAccount } from "@solana/spl-token";
+import { useGhostWallet } from "@/hooks/useGhostWallet";
 import { Button } from "@/components/ui/button";
 import { shortAddr } from "@/lib/ghost";
 import { USDC_MINT_STR } from "@/lib/config";
-import { PublicKey } from "@solana/web3.js";
 
 export function WalletChip({ compact = false }: { compact?: boolean }) {
-  const { publicKey, disconnect } = useWallet();
+  const { publicKey, disconnect } = useGhostWallet();
   const { connection } = useConnection();
   const [sol, setSol] = useState<string | null>(null);
   const [usdc, setUsdc] = useState<string | null>(null);
@@ -27,7 +27,10 @@ export function WalletChip({ compact = false }: { compact?: boolean }) {
       }
       if (!USDC_MINT_STR) return;
       try {
-        const ata = getAssociatedTokenAddressSync(new PublicKey(USDC_MINT_STR), publicKey);
+        const ata = getAssociatedTokenAddressSync(
+          new PublicKey(USDC_MINT_STR),
+          publicKey,
+        );
         const acc = await getAccount(connection, ata);
         if (!cancelled) setUsdc((Number(acc.amount) / 1_000_000).toFixed(3));
       } catch {
@@ -44,34 +47,34 @@ export function WalletChip({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <div className="rounded-xl border border-sidebar-border px-3 py-3">
-        <p className="font-mono text-[11px] text-sidebar-foreground">{shortAddr(addr, 4)}</p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+      <div className="border border-cream/15 px-3 py-3 text-cream">
+        <p className="font-mono text-[11px]">{shortAddr(addr, 4)}</p>
+        <p className="mt-1 text-[11px] text-cream/50">
           {sol != null ? `${sol} SOL` : "—"}
           {usdc != null ? ` · ${usdc} USDC` : ""}
         </p>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="mt-2 h-7 px-2 text-xs"
+        <button
+          type="button"
+          className="mt-3 text-[12px] text-cream/70 underline-offset-2 hover:text-cream hover:underline"
           onClick={() => disconnect()}
         >
           Disconnect
-        </Button>
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hairline bg-card px-5 py-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 border border-ink/15 bg-paper px-5 py-4">
       <div>
-        <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">Connected</p>
-        <p className="mt-1 font-mono text-sm">{shortAddr(addr, 6)}</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {sol != null ? `${sol} SOL` : "—"} · {usdc != null ? `${usdc} mock USDC` : "—"}
+        <span className="tag text-ink/60">Connected</span>
+        <p className="mt-3 font-mono text-sm">{shortAddr(addr, 6)}</p>
+        <p className="mt-1 text-sm text-ink/60">
+          {sol != null ? `${sol} SOL` : "—"} ·{" "}
+          {usdc != null ? `${usdc} USDC` : "—"}
         </p>
       </div>
-      <Button size="pill" variant="outline" className="rounded-full" onClick={() => disconnect()}>
+      <Button size="sm" variant="outline" onClick={() => disconnect()}>
         Disconnect
       </Button>
     </div>
