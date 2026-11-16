@@ -69,8 +69,8 @@ function Dot({ path, dur = "2.4s", begin = "0s", gold = true }: { path: string; 
 export function SchGasless() {
   const sendPath = "M150 196H296";
   return (
-    <Card code="02" title="Sending with zero SOL" specs={[["SOL you need", "None"], ["Fees paid by", "Ghost"], ["You pay", "~0.003 USDC"]]}>
-      <svg viewBox="0 0 440 300" className="absolute inset-0 h-full w-full" role="img" aria-label="Any other wallet with zero SOL is stuck and cannot send. With Ghost, a wallet with zero SOL receives 1 USDC; Ghost pays the network fee and takes about 0.003 USDC instead.">
+    <Card code="02" title="Sending with zero SOL" specs={[["SOL you need", "None"], ["Fees paid by", "Ghost"], ["You pay", "~0.01 USDC"]]}>
+      <svg viewBox="0 0 440 300" className="absolute inset-0 h-full w-full" role="img" aria-label="Without Ghost, a wallet with zero SOL is stuck. With Ghost Gas, prepaid credit covers the network fee so X2 only signs the transfer.">
         {/* row 1: the usual problem */}
         <H x={22} y={36}>ANY OTHER WALLET</H>
         <rect x="20" y="48" width="130" height="58" fill={BOX} stroke={CREAM} strokeOpacity=".3" />
@@ -114,7 +114,7 @@ export function SchGasless() {
           Ghost pays the gas
         </T>
         <T x={223} y={222} a="middle" s={10.5} o={0.55}>
-          fee: ~0.003 USDC
+          from prepaid credit
         </T>
 
         <rect x="296" y="168" width="124" height="58" fill={BOX} stroke={CREAM} strokeOpacity=".35" />
@@ -128,10 +128,10 @@ export function SchGasless() {
         </T>
 
         <T x={220} y={268} a="middle" s={12.5} o={0.95}>
-          No SOL, no problem. Ghost covers the network fee
+          No SOL, no problem. Prepaid credit covers the fee
         </T>
         <T x={220} y={285} a="middle" s={12.5} gold>
-          and takes a few cents of USDC instead.
+          so the alt wallet only signs.
         </T>
       </svg>
     </Card>

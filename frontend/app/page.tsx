@@ -20,23 +20,23 @@ import { LEGAL_PAGES } from "@/lib/legal";
 
 const pillars = [
   {
-    title: "Privacy",
-    sub: ["Unlinkable", "by default."],
-    body: "Your deposit joins a shared pool with everyone else’s. When money comes out, nobody can tell which deposit it came from, not even us.",
+    title: "Prepaid",
+    sub: ["Fund once.", "Spend many times."],
+    body: "X1 tops up USDC into Ghost and gets a gas note. That credit pays network fees later — without ever sending SOL to the signing wallet.",
     bg: "#625e5f",
     kind: "lock" as const,
   },
   {
     title: "Gasless",
-    sub: ["Zero SOL.", "Zero friction."],
-    body: "Withdraw to a brand-new wallet with no SOL at all. Ghost’s relayer covers the network fee and takes a few cents of USDC instead.",
+    sub: ["Zero SOL.", "Just a signature."],
+    body: "X2 signs the token transfer. Ghost’s relayer is the fee payer, debits the note a flat USDC fee, and the recipient gets the tokens.",
     bg: "#3f3d3e",
     kind: "diode" as const,
   },
   {
-    title: "Compliance",
-    sub: ["Private,", "not hidden."],
-    body: "Every program and transaction is public on Solana. Nullifiers prevent double-spends in the open, while your note stays on your device.",
+    title: "Private rail",
+    sub: ["Optional", "Shield pool."],
+    body: "Ghost Shield remains available for fixed-denomination private USDC when you need unlinkability. Gas is the product you use every day.",
     bg: "#252324",
     kind: "switch" as const,
   },
@@ -44,13 +44,13 @@ const pillars = [
 
 const steps = [
   {
-    title: ["Deposit", "in one click"],
-    body: "Approve and commit 1 USDC into GhostPool. You get a Ghost Note, the only key to those funds.",
+    title: ["Top up", "gas credit"],
+    body: "From a funded wallet, deposit USDC (or an allowlisted asset). Ghost issues a gas note you can save or share.",
     icon: <circle cx="12" cy="12" r="9" />,
   },
   {
-    title: ["Prove it in", "your browser"],
-    body: "Days or weeks later, a Groth16 proof is built locally in about five seconds.",
+    title: ["Attach the", "note on Send"],
+    body: "X2 pastes the note (or uses the one saved in this browser). No SOL required on that wallet.",
     icon: (
       <>
         <circle cx="12" cy="12" r="5" />
@@ -59,8 +59,8 @@ const steps = [
     ),
   },
   {
-    title: ["Withdraw with", "zero SOL"],
-    body: "A fresh address receives the USDC. The relayer fronts SOL fees, then skims a tiny USDC fee from the pool.",
+    title: ["Sign.", "Ghost pays gas."],
+    body: "You sign the SPL transfer. Ghost fronts SOL, the tokens move, and a small fee is debited from the note.",
     icon: (
       <>
         <circle cx="12" cy="12" r="9" />
@@ -142,28 +142,24 @@ const cases: Case[] = [
 
 const faqs = [
   {
-    q: "How do I send privately?",
-    a: "Deposit 1 USDC from any wallet and save the Ghost Note you get back. Later, paste the note into the app, enter a recipient, and Ghost builds the proof and relays the transfer.",
+    q: "What is Ghost Gas?",
+    a: "Prepaid network fees. X1 tops up USDC (or an allowlisted asset), gets a gas note, and any wallet holding that note can send tokens while Ghost pays the SOL fee.",
   },
   {
-    q: "Do I need SOL to withdraw?",
-    a: "No. The recipient can hold zero SOL. Ghost’s relayer pays the network fee and recovers a small USDC fee from the pool (about 0.3% / ~0.003 USDC at the default fee).",
+    q: "Do I need SOL to send?",
+    a: "Not on the signing wallet. You need a funded gas note. Ghost’s relayer is the fee payer and debits a flat USDC fee from the note per send.",
   },
   {
-    q: "Where do my secrets live?",
-    a: "Only in your browser. The secret, nullifier and Merkle path are private inputs to the circuit and never leave the tab. Only the root, nullifier hash and recipient go on-chain.",
+    q: "Who is X1 and X2?",
+    a: "X1 is the wallet that buys credit. X2 is the wallet that signs transfers (often with zero SOL). They can be the same person or different wallets.",
   },
   {
-    q: "How is the fee calculated?",
-    a: "The program skims fee_bps from the fixed 1 USDC denomination on withdraw. At 30 bps that is 0.003 USDC to the treasury; the rest goes to the recipient.",
+    q: "What if I lose my gas note?",
+    a: "The note is a bearer voucher. Anyone with it can spend the remaining credit. Store it like a password; Ghost cannot recover it for you.",
   },
   {
-    q: "How does Ghost stay open?",
-    a: "The program, pool PDA, vault, and every deposit/withdraw transaction are public on Solana Explorer. Secrets stay local; double-spend protection is on-chain via nullifiers.",
-  },
-  {
-    q: "What if I lose my Ghost Note?",
-    a: "The note is the only key to your deposit, and nobody can recover it for you. Store it the way you would store a seed phrase.",
+    q: "Is Shield the same thing?",
+    a: "No. Shield is the optional private pool (fixed 1 USDC deposits and ZK withdraws). Gas is the everyday product for sponsoring sends.",
   },
   {
     q: "Has Ghost been audited?",
@@ -185,12 +181,12 @@ export default function Home() {
           <div className="grid items-end gap-8 md:grid-cols-[1fr_minmax(0,584px)] md:gap-10">
             <h1 className="t-68">
               <span className="mask">
-                <span>Private is better.</span>
+                <span>Gas, prepaid.</span>
               </span>
             </h1>
             <p className="t-24 max-w-[584px]">
-              Stablecoin transfers that can’t be traced and don’t need gas. Ghost lets a wallet
-              with zero SOL receive USDC on Solana.
+              Fund credit once. Any wallet can send tokens with zero SOL. Ghost pays the network
+              fee and debits the note — no SOL handoff that leaks who bankrolled whom.
             </p>
           </div>
         </header>
@@ -199,15 +195,15 @@ export default function Home() {
           <div className="grid md:h-full md:grid-cols-[316px_1fr]">
             <div className="flex flex-col justify-between gap-12 pb-10 pt-[66px] md:gap-6 md:pb-[clamp(20px,6vh,68px)] md:pr-10 md:pt-[clamp(24px,6vh,66px)]">
               <p className="t-16 max-w-[240px]">
-                Your private, gasless
+                Your prepaid,
                 <br />
-                stablecoin rail
+                gasless send rail
               </p>
               <ul className="max-w-[276px]">
                 {[
-                  "0 SOL in the recipient wallet",
-                  "Proof in about five seconds",
-                  "Fees settled in USDC",
+                  "0 SOL on the signing wallet",
+                  "Top up once, send many times",
+                  "Fees settled in USDC credit",
                   "Live on Solana",
                 ].map((t) => (
                   <li
@@ -228,6 +224,51 @@ export default function Home() {
         </section>
       </div>
 
+      <section className="gutter border-b border-ink/10 bg-cream py-[72px] md:py-[96px]">
+        <div className="grid gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-16 md:items-start">
+          <Reveal>
+            <h2 className="t-48 max-w-[16ch]">How Ghost Gas works</h2>
+            <p className="t-16 mt-5 max-w-[36ch] font-normal leading-[1.5] text-ink/65">
+              In plain terms: one wallet pays for gas ahead of time. Another wallet can send
+              tokens without holding any SOL.
+            </p>
+          </Reveal>
+          <Reveal delay={80}>
+            <ol className="border-t border-ink/15">
+              {[
+                {
+                  title: "Primary wallet tops up",
+                  body: "Your funded wallet sends USDC to Ghost and gets a gas note back. That note is prepaid credit for network fees.",
+                },
+                {
+                  title: "Alt wallet only signs",
+                  body: "A second wallet (often with zero SOL) pastes the note, picks a token and recipient, and signs the transfer.",
+                },
+                {
+                  title: "Ghost pays the network fee",
+                  body: "Ghost covers the SOL fee on-chain, the tokens move from the alt wallet to the recipient, and a small fee comes out of the gas note.",
+                },
+              ].map((step, i) => (
+                <li
+                  key={step.title}
+                  className="grid grid-cols-[48px_1fr] gap-4 border-b border-ink/15 py-6 md:gap-6"
+                >
+                  <span className="font-mono text-[12px] tracking-[0.06em] text-ink/45">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <p className="t-20">{step.title}</p>
+                    <p className="t-14 mt-2 max-w-[52ch] font-normal leading-[1.5] text-ink/60">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+        </div>
+      </section>
+
       <section className="bg-sand">
         <div className="gutter">
           <div className="flex flex-wrap items-center gap-x-10 gap-y-6 border-b border-ink/15 py-[60px]">
@@ -239,17 +280,17 @@ export default function Home() {
 
           <div className="grid gap-12 pb-[80px] pt-[110px] md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:gap-10">
             <div className="flex flex-col justify-between gap-12">
-              <span className="tag text-ink">Under the hood</span>
+              <span className="tag text-ink">Also built</span>
               <Reveal>
                 <h2 className="t-56">
-                  Privacy is just
+                  Shield when
                   <br />
-                  the beginning.
+                  you need unlinkable.
                 </h2>
                 <p className="t-16 mt-6 max-w-[400px] font-normal leading-[1.5] text-ink/70">
-                  Two pieces of math do all the work. A Merkle tree hides which deposit is yours,
-                  and a zero-knowledge proof shows your withdrawal is valid without saying anything
-                  more.
+                  Ghost Gas is the daily product. Ghost Shield is the optional private pool: a
+                  Merkle tree hides which deposit is yours, and a proof shows a withdraw is valid
+                  without saying more.
                 </p>
                 <ol className="mt-10 max-w-[400px]">
                   {[
@@ -285,14 +326,15 @@ export default function Home() {
             <span className="tag self-start text-ink md:mt-[12px]">The Ghost difference</span>
             <Reveal>
               <p className="t-32 max-w-[640px]">
-                Your secret never leaves your device, every withdrawal is checked before broadcast,
-                and you never need to hold SOL to receive funds.
+                Prepaid credit means X2 never needs SOL. The note stays with you, Ghost sponsors
+                each send, and a flat USDC fee comes out of the credit — not a SOL transfer from X1
+                to X2.
               </p>
               <dl className="mt-12 grid max-w-[640px] grid-cols-3 border-t border-ink/15">
                 {[
-                  ["~5 s", "to prove, in your browser"],
-                  ["0 SOL", "in the recipient wallet"],
-                  ["0.003", "USDC fee per withdraw"],
+                  ["0 SOL", "on the signing wallet"],
+                  ["1 note", "funds many sponsored sends"],
+                  ["~0.01", "USDC fee per send"],
                 ].map(([v, k]) => (
                   <div
                     key={k}
@@ -358,8 +400,8 @@ export default function Home() {
             <span className="tag">How it works</span>
             <Reveal>
               <p className="t-24 max-w-[560px]">
-                Ghost splits the work so your secret never leaves your device. Your browser makes
-                the proof, a relayer sends it for you, and Ghost checks it before any USDC moves.
+                X1 prepays. X2 signs. Ghost pays the network fee from the note. No SOL handoff
+                between them — that link is the leak Gas is built to avoid.
               </p>
             </Reveal>
             <a
@@ -410,8 +452,8 @@ export default function Home() {
           </Reveal>
           <figure className="relative -mt-24 ml-auto flex min-h-[320px] max-w-[560px] flex-col justify-between gap-10 bg-night p-8 text-cream md:absolute md:-bottom-[100px] md:right-[40px] md:mt-0 md:min-h-[400px] md:w-[42%]">
             <blockquote className="t-24 leading-[1.3]">
-              “A wallet with zero SOL received USDC. Ghost paid the network fee and took a few
-              cents of USDC instead.”
+              “A wallet with zero SOL signed a transfer. Ghost paid the network fee from prepaid
+              credit and the tokens still arrived.”
             </blockquote>
             <figcaption className="t-16 font-normal">
               <a
@@ -422,7 +464,7 @@ export default function Home() {
               >
                 Transaction {short(transactions[1].hash)}
               </a>
-              <span className="text-smoke">Solana · gasless withdraw</span>
+              <span className="text-smoke">Solana · Ghost Gas</span>
             </figcaption>
           </figure>
         </div>

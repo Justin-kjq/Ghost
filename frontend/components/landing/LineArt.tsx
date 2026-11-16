@@ -10,15 +10,15 @@ const L = { pathLength: 1 };
 /* ───────── the system "cabinet" drawing for How it works ───────── */
 
 export const parts = [
-  { n: 1, name: "Secret note", where: "kept on your device" },
-  { n: 2, name: "Proof maker", where: "runs in your browser" },
-  { n: 3, name: "Relayer", where: "sends the transfer for you" },
-  { n: 4, name: "Network gateway", where: "standard entry point" },
+  { n: 1, name: "Gas note", where: "prepaid credit voucher" },
+  { n: 2, name: "X1 top-up", where: "USDC into Ghost treasury" },
+  { n: 3, name: "Relayer", where: "sponsors the send for you" },
+  { n: 4, name: "Network gateway", where: "standard Solana entry" },
   { n: 5, name: "Gas sponsor", where: "pays the Solana network fee" },
-  { n: 6, name: "Proof checker", where: "verifies on-chain" },
-  { n: 7, name: "New wallet", where: "created for you, 0 SOL" },
-  { n: 8, name: "Ghost pool", where: "holds every deposit" },
-  { n: 9, name: "Fingerprinter", where: "hashes deposits" },
+  { n: 6, name: "Credit ledger", where: "debits the note per send" },
+  { n: 7, name: "X2 signer", where: "can hold 0 SOL" },
+  { n: 8, name: "Ghost treasury", where: "holds prepaid USDC" },
+  { n: 9, name: "Token transfer", where: "you sign, Ghost pays gas" },
 ];
 
 // [x, y, w, h] for each part, in a 520 × 640 cabinet
