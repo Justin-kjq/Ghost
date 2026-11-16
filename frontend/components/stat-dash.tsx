@@ -30,7 +30,7 @@ export function StatDash({
         <Skeleton className="mt-3 h-9 w-28" />
       ) : missing ? (
         <p className="mt-2 flex items-center gap-2 font-serif text-3xl">
-          —
+          -
           <Tooltip>
             <TooltipTrigger asChild>
               <button type="button" className="text-muted-foreground" aria-label="Why unavailable">

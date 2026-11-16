@@ -48,7 +48,7 @@ export function AppSidebar() {
           </span>
         </Link>
         <p className="mt-4 px-0.5 text-[12px] font-normal leading-snug text-cream/45">
-          Prepaid gas for Solana sends — no SOL on the signer.
+          Prepaid gas for Solana sends. No SOL needed on the signer.
         </p>
       </SidebarHeader>
       <SidebarContent>

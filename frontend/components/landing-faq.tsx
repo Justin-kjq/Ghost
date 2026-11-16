@@ -14,7 +14,7 @@ const items = [
   },
   {
     q: "Who sees the Ghost Note?",
-    a: "Only you. Proofs are generated in the browser. The relayer never needs the note — sending it would let a curious relayer link your deposit to your withdraw.",
+    a: "Only you. Proofs are generated in the browser. The relayer never needs the note; sending it would let a curious relayer link your deposit to your withdraw.",
   },
   {
     q: "Is this trustless?",

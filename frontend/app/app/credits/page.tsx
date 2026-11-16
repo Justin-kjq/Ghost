@@ -61,7 +61,7 @@ export default function CreditsPage() {
   const feeUi =
     gas?.creditFeeRaw != null
       ? (Number(gas.creditFeeRaw) / 1_000_000).toFixed(2)
-      : "—";
+      : "-";
 
   const estimatedSends =
     totalRemaining != null && gas?.creditFeeRaw
@@ -83,7 +83,7 @@ export default function CreditsPage() {
       });
       setLastNote(stored.note);
       refresh();
-      toast.success("Credit funded. Save the note — Send needs it.");
+      toast.success("Credit funded. Save the note; Send needs it.");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -141,11 +141,11 @@ export default function CreditsPage() {
           <RailBlock title="Who pays what">
             <ul className="space-y-2">
               <li>
-                <span className="text-ink">You</span> — USDC top-up + token transfer
+                <span className="text-ink">You:</span> USDC top-up + token transfer
                 signature
               </li>
               <li>
-                <span className="text-ink">Ghost</span> — SOL network fee on each send
+                <span className="text-ink">Ghost:</span> SOL network fee on each send
               </li>
             </ul>
           </RailBlock>
@@ -219,7 +219,7 @@ export default function CreditsPage() {
                 {lastNote}
               </p>
               <p className="mt-3 text-[13px] font-normal text-ink/55">
-                Treat this like a bearer voucher — anyone with the note can spend the
+                Treat this like a bearer voucher. Anyone with the note can spend the
                 credit.
               </p>
             </div>

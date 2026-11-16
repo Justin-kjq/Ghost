@@ -7,7 +7,7 @@ import { SITE_URL } from "@/lib/addresses";
 import { CLUSTER } from "@/lib/config";
 
 /**
- * Reown AppKit (WalletConnect) project id — https://dashboard.reown.com
+ * Reown AppKit (WalletConnect) project id: https://dashboard.reown.com
  * The public fallback only works on localhost.
  */
 export const WALLETCONNECT_PROJECT_ID =
@@ -21,7 +21,7 @@ const metadata = {
   // Must match the page origin (localhost in dev, SITE_URL in prod).
   url:
     typeof window !== "undefined" ? window.location.origin : SITE_URL,
-  icons: ["https://avatars.githubusercontent.com/u/179229932"],
+  icons: [`${SITE_URL}/icon.svg`],
 };
 
 const solanaAdapter = new SolanaAdapter();

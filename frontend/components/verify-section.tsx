@@ -59,12 +59,12 @@ export function VerifySection({ stats }: { stats: PoolLiveStats }) {
     {
       icon: Cpu,
       t: "Proofs in the browser",
-      d: "Groth16 (Circom) runs locally. The relayer never needs the note — sending it would let someone link you.",
+      d: "Groth16 (Circom) runs locally. The relayer never needs the note; sending it would let someone link you.",
     },
     {
       icon: Shield,
       t: "Recipient-bound proofs",
-      d: "The destination pubkey is a Groth16 public signal. An honest relayer cannot reroute your withdraw. This Lean MVP still verifies proofs off-chain — a malicious relayer can drain the vault.",
+      d: "The destination pubkey is a Groth16 public signal. An honest relayer cannot reroute your withdraw. This Lean MVP still verifies proofs off-chain; a malicious relayer can drain the vault.",
     },
     {
       icon: FileWarning,

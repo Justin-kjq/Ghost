@@ -79,7 +79,7 @@ export default function RiskPage() {
         <p>
           There is no deposit insurance, no guaranteed uptime, and no guarantee of privacy,
           anonymity, or successful withdrawal. Interface copy that describes “gasless” withdrawals
-          means the relayer may pay Solana fees when it chooses to operate — not that withdrawals
+          means the relayer may pay Solana fees when it chooses to operate, not that withdrawals
           are free of all cost or risk.
         </p>
       </LegalSection>

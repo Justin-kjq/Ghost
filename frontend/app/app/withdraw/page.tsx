@@ -69,13 +69,13 @@ export default function WithdrawPage() {
     a.click();
     URL.revokeObjectURL(url);
     setRecipient(pubkey);
-    toast.success("Fresh address filled. Secret key downloaded — keep it offline.");
+    toast.success("Fresh address filled. Secret key downloaded; keep it offline.");
   }
 
   async function onWithdraw() {
     const to = recipient.trim();
     if (!to) {
-      toast.error("Enter a recipient address — preferably a fresh one.");
+      toast.error("Enter a recipient address, preferably a fresh one.");
       return;
     }
     if (!note.trim()) {
@@ -108,7 +108,7 @@ export default function WithdrawPage() {
       <PageHeader
         tag="Withdraw"
         title="Leave no trail of gas."
-        description="Paste a Ghost Note and a recipient. The relayer pays fees — the recipient needs 0 SOL."
+        description="Paste a Ghost Note and a recipient. The relayer pays fees. The recipient needs 0 SOL."
       />
 
       <section className="border border-ink/15 bg-paper p-6 md:p-8">

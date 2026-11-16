@@ -123,9 +123,9 @@ export function StatusPill({
 }
 
 export function formatUsdcRaw(raw: string | undefined | null): string {
-  if (raw == null || raw === "" || raw === "?") return "—";
+  if (raw == null || raw === "" || raw === "?") return "-";
   const n = Number(raw);
-  if (!Number.isFinite(n)) return "—";
+  if (!Number.isFinite(n)) return "-";
   return (n / 1_000_000).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 4,

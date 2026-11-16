@@ -35,7 +35,7 @@ function keypairFromInjected(): Keypair | null {
 
 /**
  * Injected keypair wallet for headless / CI demos.
- * Never bake a secret into NEXT_PUBLIC_* — set window.__GHOST_DEV_WALLET__
+ * Never bake a secret into NEXT_PUBLIC_*. Set window.__GHOST_DEV_WALLET__
  * (64-byte JSON array) at runtime, then connect this adapter.
  */
 export class GhostDevWalletAdapter extends BaseMessageSignerWalletAdapter {

@@ -78,6 +78,13 @@ export function getCredit(commitment: string): GasCredit | undefined {
   return credits.find((c) => normCommitment(c.commitment) === key);
 }
 
+/** One on-chain deposit tx may fund exactly one credit row. */
+export function getCreditByDepositTx(txSignature: string): GasCredit | undefined {
+  const sig = txSignature.trim();
+  if (!sig) return undefined;
+  return credits.find((c) => c.depositTx === sig);
+}
+
 export function listCredits(): GasCredit[] {
   return [...credits];
 }
@@ -133,9 +140,20 @@ export async function registerGasCreditDeposit(params: {
     });
   }
 
+  const txSignature = params.txSignature.trim();
+  if (!txSignature) {
+    throw Object.assign(new Error("txSignature required"), { statusCode: 400 });
+  }
+  // Critical: one deposit tx → one credit. New commitments must not reuse the same sig.
+  if (getCreditByDepositTx(txSignature)) {
+    throw Object.assign(new Error("Deposit transaction already registered"), {
+      statusCode: 400,
+    });
+  }
+
   const treasury = getGasTreasuryAta();
   const connection = getConnection();
-  const parsed = await connection.getParsedTransaction(params.txSignature, {
+  const parsed = await connection.getParsedTransaction(txSignature, {
     maxSupportedTransactionVersion: 0,
     commitment: "confirmed",
   });
@@ -180,10 +198,12 @@ export async function registerGasCreditDeposit(params: {
     if (delta > 0n) credited += delta;
   }
 
-  if (credited < want) {
+  // Exact match: under-claiming would leave unspendable treasury USDC and invite
+  // partial-replay games if the tx check were ever weakened.
+  if (credited !== want) {
     throw Object.assign(
       new Error(
-        `On-chain treasury credit ${credited.toString()} is less than claimed ${want.toString()}`,
+        `Claimed amount ${want.toString()} must equal on-chain treasury credit ${credited.toString()}`,
       ),
       { statusCode: 400 },
     );
@@ -194,7 +214,7 @@ export async function registerGasCreditDeposit(params: {
     commitment,
     initialAmount: params.amount,
     remaining: params.amount,
-    depositTx: params.txSignature,
+    depositTx: txSignature,
     createdAt: now,
     updatedAt: now,
   };

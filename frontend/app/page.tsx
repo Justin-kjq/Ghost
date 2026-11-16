@@ -22,7 +22,7 @@ const pillars = [
   {
     title: "Privacy",
     sub: ["Unlinkable", "by default."],
-    body: "Your deposit joins a shared pool with everyone else’s. When money comes out, nobody can tell which deposit it came from — not even us.",
+    body: "Your deposit joins a shared pool with everyone else’s. When money comes out, nobody can tell which deposit it came from, not even us.",
     bg: "#625e5f",
     kind: "lock" as const,
   },
@@ -45,7 +45,7 @@ const pillars = [
 const steps = [
   {
     title: ["Deposit", "in one click"],
-    body: "Approve and commit 1 USDC into GhostPool. You get a Ghost Note — the only key to those funds.",
+    body: "Approve and commit 1 USDC into GhostPool. You get a Ghost Note, the only key to those funds.",
     icon: <circle cx="12" cy="12" r="9" />,
   },
   {
@@ -167,7 +167,7 @@ const faqs = [
   },
   {
     q: "Has Ghost been audited?",
-    a: "Not yet. Ghost is an unaudited Lean MVP — use it accordingly until an audit is complete.",
+    a: "Not yet. Ghost is an unaudited Lean MVP. Use it accordingly until an audit is complete.",
   },
   {
     q: "Which networks are supported?",

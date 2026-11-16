@@ -19,14 +19,14 @@ export const DEVNET = {
 };
 
 export const MAINNET = {
-  /** Not deployed — Ghost Gas does not require the pool program. */
+  /** Not deployed. Ghost Gas does not require the pool program. */
   program: "",
   mint: MAINNET_USDC_MINT,
   pool: "",
   vault: "",
 };
 
-/** Explorer cluster query — omit for mainnet so links resolve to production. */
+/** Explorer cluster query; omit for mainnet so links resolve to production. */
 export function explorerClusterQuery(cluster = CLUSTER): string {
   if (
     cluster === "localnet" ||

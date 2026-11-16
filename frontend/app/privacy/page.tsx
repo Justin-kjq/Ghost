@@ -11,7 +11,7 @@ export default function PrivacyPage() {
   return (
     <LegalShell
       title="Privacy Policy"
-      description="What Ghost learns about you — and what stays only on your device."
+      description="What Ghost learns about you, and what stays only on your device."
     >
       <LegalSection title="1. Who we are">
         <p>

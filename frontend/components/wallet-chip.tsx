@@ -50,7 +50,7 @@ export function WalletChip({ compact = false }: { compact?: boolean }) {
       <div className="border border-cream/15 px-3 py-3 text-cream">
         <p className="font-mono text-[11px]">{shortAddr(addr, 4)}</p>
         <p className="mt-1 text-[11px] text-cream/50">
-          {sol != null ? `${sol} SOL` : "—"}
+          {sol != null ? `${sol} SOL` : "-"}
           {usdc != null ? ` · ${usdc} USDC` : ""}
         </p>
         <button
@@ -70,8 +70,8 @@ export function WalletChip({ compact = false }: { compact?: boolean }) {
         <span className="tag text-ink/60">Connected</span>
         <p className="mt-3 font-mono text-sm">{shortAddr(addr, 6)}</p>
         <p className="mt-1 text-sm text-ink/60">
-          {sol != null ? `${sol} SOL` : "—"} ·{" "}
-          {usdc != null ? `${usdc} USDC` : "—"}
+          {sol != null ? `${sol} SOL` : "-"} ·{" "}
+          {usdc != null ? `${usdc} USDC` : "-"}
         </p>
       </div>
       <Button size="sm" variant="outline" onClick={() => disconnect()}>

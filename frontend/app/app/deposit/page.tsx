@@ -58,7 +58,7 @@ export default function DepositPage() {
       <PageHeader
         tag="Deposit"
         title="One USDC. One leaf."
-        description="Deposit 1 USDC and receive a Ghost Note — treat it as a private key."
+        description="Deposit 1 USDC and receive a Ghost Note. Treat it as a private key."
       />
 
       <section className="border border-ink/15 bg-paper p-6 md:p-8">

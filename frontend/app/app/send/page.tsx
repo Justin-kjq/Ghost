@@ -204,7 +204,7 @@ export default function SendPage() {
   return (
     <AppWorkspace
       title="Send"
-      description="Sign the transfer. Ghost pays the network fee from your prepaid credit — the signing wallet can hold zero SOL."
+      description="Sign the transfer. Ghost pays the network fee from your prepaid credit. The signing wallet can hold zero SOL."
       actions={
         <>
           <StatusPill tone={creditOk ? "ok" : "warn"}>
@@ -251,7 +251,7 @@ export default function SendPage() {
             <ol className="list-decimal space-y-2 pl-4">
               <li>Fund credit once from your main wallet.</li>
               <li>Paste the note here (or keep the saved one).</li>
-              <li>Send any token — you only sign.</li>
+              <li>Send any token. You only sign.</li>
             </ol>
           </RailBlock>
 
@@ -311,7 +311,7 @@ export default function SendPage() {
                 data-testid="send-token"
               >
                 {tokens.length === 0 ? (
-                  <option value={CUSTOM}>No tokens found — paste mint</option>
+                  <option value={CUSTOM}>No tokens found; paste mint</option>
                 ) : null}
                 {tokens.map((t) => (
                   <option key={t.mint} value={t.mint}>

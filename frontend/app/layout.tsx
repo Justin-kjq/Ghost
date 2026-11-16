@@ -35,7 +35,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Ghost — Private USDC on Solana",
+    default: "Ghost | Private USDC on Solana",
     template: "%s · Ghost",
   },
   description:
@@ -45,15 +45,18 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: "Ghost",
-    title: "Ghost — Private USDC on Solana",
+    title: "Ghost | Private USDC on Solana",
     description:
       "Shielded USDC deposits and gasless private withdrawals on Solana.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ghost — Private USDC on Solana",
+    title: "Ghost | Private USDC on Solana",
     description:
       "Shielded USDC deposits and gasless private withdrawals on Solana.",
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
 };
 

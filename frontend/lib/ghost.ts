@@ -115,7 +115,7 @@ export async function withdrawWithNote(
 
 export async function fetchPoolInfo() {
   const res = await fetch(`${RELAYER_URL}/v1/pool`);
-  if (!res.ok) throw new Error("Relayer /v1/pool failed — is it running?");
+  if (!res.ok) throw new Error("Relayer /v1/pool failed. Is it running?");
   return res.json();
 }
 
