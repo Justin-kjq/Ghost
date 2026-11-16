@@ -33,6 +33,7 @@ import {
   configureGasCredits,
   getGasTreasuryAta,
   peekGasNoteBalance,
+  quoteGasCreditDeposit,
   registerGasCreditDeposit,
 } from "./gas-credits.js";
 
@@ -98,12 +99,37 @@ export async function buildApp(
   app.get("/v1/gas/config", async () => getGasPublicConfig());
 
   app.post<{
-    Body: { commitment?: string; amount?: string; txSignature?: string };
+    Body: { mint?: string; amount?: string };
+  }>("/v1/gas/credits/quote", async (req, reply) => {
+    try {
+      const amount = String(req.body?.amount || "");
+      const mint = req.body?.mint != null ? String(req.body.mint) : undefined;
+      if (!amount) return reply.code(400).send({ error: "amount required" });
+      return await quoteGasCreditDeposit({ mint, amount });
+    } catch (err: any) {
+      const code =
+        err?.statusCode === 400 ||
+        err?.statusCode === 502 ||
+        err?.statusCode === 503
+          ? err.statusCode
+          : 500;
+      return reply.code(code).send({ error: err?.message ?? "quote failed" });
+    }
+  });
+
+  app.post<{
+    Body: {
+      commitment?: string;
+      amount?: string;
+      txSignature?: string;
+      mint?: string;
+    };
   }>("/v1/gas/credits/deposit", async (req, reply) => {
     try {
       const commitment = String(req.body?.commitment || "");
       const amount = String(req.body?.amount || "");
       const txSignature = String(req.body?.txSignature || "");
+      const mint = req.body?.mint != null ? String(req.body.mint) : undefined;
       if (!commitment || !amount || !txSignature) {
         return reply.code(400).send({
           error: "commitment, amount, and txSignature required",
@@ -113,6 +139,7 @@ export async function buildApp(
         commitment,
         amount,
         txSignature,
+        mint,
       });
       let treasury: string | null = null;
       try {
@@ -123,7 +150,11 @@ export async function buildApp(
       return { credit, treasury };
     } catch (err: any) {
       const code =
-        err?.statusCode === 400 || err?.statusCode === 503 ? err.statusCode : 500;
+        err?.statusCode === 400 ||
+        err?.statusCode === 502 ||
+        err?.statusCode === 503
+          ? err.statusCode
+          : 500;
       req.log.error(err);
       return reply.code(code).send({ error: err?.message ?? "credit deposit failed" });
     }

@@ -16,24 +16,34 @@ import {
 } from "@/components/app-workspace";
 import { useGhostWallet } from "@/hooks/useGhostWallet";
 import {
+  NATIVE_SOL,
   fetchGasNoteBalance,
   listGasNotes,
+  quoteGasCredit,
   topUpGasCredits,
+  type CreditQuote,
   type StoredGasNote,
 } from "@/lib/gas-credits";
-import { fetchGasConfig, type GasConfig } from "@/lib/gas";
+import { fetchGasConfig, toRawAmount, type GasConfig } from "@/lib/gas";
+import {
+  fetchWalletAssets,
+  type WalletToken,
+} from "@/lib/token-balances";
 import { shortAddr } from "@/lib/ghost";
-
-const PRESETS = ["1", "5", "10", "25"];
 
 export default function CreditsPage() {
   const { publicKey, signTransaction, connected } = useGhostWallet();
-  const [amount, setAmount] = useState("5");
+  const [amount, setAmount] = useState("1");
   const [busy, setBusy] = useState(false);
   const [gas, setGas] = useState<GasConfig | null>(null);
   const [notes, setNotes] = useState<StoredGasNote[]>([]);
   const [lastNote, setLastNote] = useState("");
   const [refreshing, setRefreshing] = useState<string | null>(null);
+  const [assets, setAssets] = useState<WalletToken[]>([]);
+  const [selectedMint, setSelectedMint] = useState<string>("");
+  const [quote, setQuote] = useState<CreditQuote | null>(null);
+  const [quoteBusy, setQuoteBusy] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
 
   function refresh() {
     setNotes(listGasNotes());
@@ -45,6 +55,86 @@ export default function CreditsPage() {
       .then(setGas)
       .catch(() => setGas(null));
   }, []);
+
+  useEffect(() => {
+    if (!publicKey) {
+      setAssets([]);
+      setSelectedMint("");
+      return;
+    }
+    let cancelled = false;
+    fetchWalletAssets(publicKey)
+      .then((list) => {
+        if (cancelled) return;
+        const allow = gas?.creditDepositMints;
+        const filtered =
+          allow && allow.length
+            ? list.filter(
+                (a) =>
+                  allow.includes(a.mint) ||
+                  (a.mint === NATIVE_SOL && allow.includes("native")),
+              )
+            : list;
+        setAssets(filtered.length ? filtered : list);
+        setSelectedMint((prev) => {
+          const pool = filtered.length ? filtered : list;
+          if (prev && pool.some((a) => a.mint === prev)) return prev;
+          const usdc = gas?.usdcMint;
+          const prefer =
+            (usdc && pool.find((a) => a.mint === usdc)) ||
+            pool.find((a) => a.mint === NATIVE_SOL) ||
+            pool[0];
+          return prefer?.mint ?? NATIVE_SOL;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setAssets([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [publicKey, gas?.usdcMint]);
+
+  const activeAsset = useMemo(
+    () => assets.find((a) => a.mint === selectedMint) ?? null,
+    [assets, selectedMint],
+  );
+
+  useEffect(() => {
+    if (!activeAsset || !amount.trim()) {
+      setQuote(null);
+      setQuoteError("");
+      return;
+    }
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      setQuoteBusy(true);
+      setQuoteError("");
+      const raw = toRawAmount(amount, activeAsset.decimals);
+      if (raw === "0") {
+        setQuote(null);
+        setQuoteBusy(false);
+        return;
+      }
+      quoteGasCredit({ mint: activeAsset.mint, amountRaw: raw })
+        .then((q) => {
+          if (!cancelled) setQuote(q);
+        })
+        .catch((e: unknown) => {
+          if (!cancelled) {
+            setQuote(null);
+            setQuoteError(e instanceof Error ? e.message : String(e));
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setQuoteBusy(false);
+        });
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [activeAsset, amount]);
 
   const totalRemaining = useMemo(() => {
     let sum = 0n;
@@ -73,17 +163,30 @@ export default function CreditsPage() {
       toast.error("Connect a funded wallet to top up gas credits.");
       return;
     }
+    if (!activeAsset) {
+      toast.error("Choose an asset to deposit.");
+      return;
+    }
     setBusy(true);
     try {
-      toast.message("Depositing USDC into Ghost gas pool…");
+      toast.message(`Depositing ${activeAsset.label} for gas credit…`);
       const stored = await topUpGasCredits({
         uiAmount: amount,
+        mint: activeAsset.mint,
+        decimals: activeAsset.decimals,
+        tokenProgramId:
+          activeAsset.programId === "native"
+            ? undefined
+            : activeAsset.programId,
         publicKey,
         signTransaction,
       });
       setLastNote(stored.note);
       refresh();
       toast.success("Credit funded. Save the note; Send needs it.");
+      if (publicKey) {
+        fetchWalletAssets(publicKey).then(setAssets).catch(() => undefined);
+      }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -110,10 +213,20 @@ export default function CreditsPage() {
     toast.success("Gas note copied");
   }
 
+  function setMax() {
+    if (activeAsset) setAmount(activeAsset.uiAmount);
+  }
+
+  const multi = gas?.multiAsset !== false;
+
   return (
     <AppWorkspace
       title="Credits"
-      description="Prepay USDC once. Any wallet with the note can send tokens while Ghost covers network fees."
+      description={
+        multi
+          ? "Deposit an allowlisted asset (USDC, SOL, and approved stables). Ghost prices non-USDC deposits from live liquidity and issues dollar credit."
+          : "Prepay USDC once. Any wallet with the note can send tokens while Ghost covers network fees."
+      }
       actions={
         <>
           <StatusPill tone={notes.length ? "ok" : "warn"}>
@@ -129,7 +242,7 @@ export default function CreditsPage() {
           <RailBlock title="Balance in this browser">
             <p className="text-[28px] tracking-[-0.03em] text-ink">
               {formatUsdcRaw(totalRemaining)}{" "}
-              <span className="text-[13px] text-ink/50">USDC</span>
+              <span className="text-[13px] text-ink/50">USDC credit</span>
             </p>
             {estimatedSends != null ? (
               <p className="mt-2">~{estimatedSends} sponsored sends left</p>
@@ -138,15 +251,14 @@ export default function CreditsPage() {
             )}
           </RailBlock>
 
-          <RailBlock title="Who pays what">
+          <RailBlock title="Pricing">
             <ul className="space-y-2">
+              <li>Credits are always tracked in USDC dollars.</li>
               <li>
-                <span className="text-ink">You:</span> USDC top-up + token transfer
-                signature
+                Non-USDC deposits use live Jupiter liquidity (with a small
+                haircut).
               </li>
-              <li>
-                <span className="text-ink">Ghost:</span> SOL network fee on each send
-              </li>
+              <li>Only allowlisted assets are accepted (no random tokens).</li>
             </ul>
           </RailBlock>
 
@@ -155,57 +267,102 @@ export default function CreditsPage() {
             <Link href="/app/send" className="underline underline-offset-2">
               Send
             </Link>{" "}
-            and attach the note (auto-filled if saved here).
+            and attach the note.
           </RailBlock>
         </>
       }
     >
       <WorkspacePanel>
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <Label htmlFor="credit-amount">Top up amount</Label>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {PRESETS.map((p) => (
+        <div className="space-y-5">
+          <div>
+            <Label htmlFor="credit-asset">Deposit asset</Label>
+            <select
+              id="credit-asset"
+              className="mt-2 h-12 w-full border border-ink/15 bg-cream px-3 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
+              value={selectedMint}
+              onChange={(e) => setSelectedMint(e.target.value)}
+              disabled={!connected}
+            >
+              {!connected ? (
+                <option value="">Connect wallet to load balances</option>
+              ) : assets.length === 0 ? (
+                <option value={NATIVE_SOL}>SOL</option>
+              ) : (
+                assets.map((a) => (
+                  <option key={a.mint} value={a.mint}>
+                    {a.label} · {a.uiAmount}
+                  </option>
+                ))
+              )}
+            </select>
+            {activeAsset ? (
+              <p className="mt-2 text-[12px] text-ink/50">
+                Available {activeAsset.uiAmount}
                 <button
-                  key={p}
                   type="button"
-                  onClick={() => setAmount(p)}
-                  className={`h-9 border px-3 text-[13px] transition-colors ${
-                    amount === p
-                      ? "border-ink bg-ink text-cream"
-                      : "border-ink/15 bg-cream text-ink hover:bg-sand"
-                  }`}
+                  className="ml-3 underline underline-offset-2"
+                  onClick={setMax}
                 >
-                  {p} USDC
+                  Max
                 </button>
-              ))}
-            </div>
-            <div className="relative mt-3 max-w-xs">
-              <Input
-                id="credit-amount"
-                className="h-12 rounded-none border-ink/15 bg-cream pr-16 text-[20px] tracking-[-0.02em]"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                inputMode="decimal"
-              />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-ink/45">
-                USDC
-              </span>
-            </div>
+              </p>
+            ) : null}
           </div>
-          <Button
-            size="pill"
-            className="h-12 w-full shrink-0 text-[16px] sm:w-auto sm:min-w-[180px]"
-            disabled={busy || !connected}
-            onClick={onTopUp}
-            data-testid="gas-credit-topup"
-          >
-            {busy ? "Confirm in wallet…" : "Buy credit"}
-          </Button>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="credit-amount">Amount</Label>
+              <div className="relative mt-2 max-w-xs">
+                <Input
+                  id="credit-amount"
+                  className="h-12 rounded-none border-ink/15 bg-cream pr-16 text-[20px] tracking-[-0.02em]"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  inputMode="decimal"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-ink/45">
+                  {activeAsset?.label ?? "…"}
+                </span>
+              </div>
+            </div>
+            <Button
+              size="pill"
+              className="h-12 w-full shrink-0 text-[16px] sm:w-auto sm:min-w-[180px]"
+              disabled={busy || !connected || !quote || !!quoteError}
+              onClick={onTopUp}
+              data-testid="gas-credit-topup"
+            >
+              {busy ? "Confirm in wallet…" : "Buy credit"}
+            </Button>
+          </div>
+
+          <div className="border border-ink/10 bg-sand/40 px-4 py-3 text-[13px]">
+            {quoteBusy ? (
+              <p className="text-ink/55">Fetching live USD quote…</p>
+            ) : quoteError ? (
+              <p className="text-ink/70">{quoteError}</p>
+            ) : quote ? (
+              <p className="text-ink">
+                ≈ <span className="text-[18px] tracking-[-0.02em]">{quote.creditUi}</span>{" "}
+                USDC credit
+                {quote.haircutBps > 0 ? (
+                  <span className="text-ink/50">
+                    {" "}
+                    (after {quote.haircutBps / 100}% buffer)
+                  </span>
+                ) : null}
+                <span className="mt-1 block text-[12px] text-ink/45">
+                  via {quote.routeLabel}
+                </span>
+              </p>
+            ) : (
+              <p className="text-ink/50">Enter an amount to see dollar credit.</p>
+            )}
+          </div>
         </div>
         {!connected ? (
           <p className="mt-4 text-[13px] font-normal text-ink/50">
-            Connect the funded wallet that holds USDC.
+            Connect the wallet that holds the asset you want to deposit.
           </p>
         ) : null}
       </WorkspacePanel>

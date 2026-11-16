@@ -23,6 +23,23 @@ export interface RelayerConfig {
   gasCreditFeeRaw: string;
   /** Optional override for gas credit treasury ATA; default = relayer USDC ATA. */
   gasTreasury: PublicKey | null;
+  /**
+   * Accept SOL / any SPL for credit top-up, priced to USDC via Jupiter.
+   * Default on. Set GAS_MULTI_ASSET=0 to force USDC-only deposits.
+   */
+  gasMultiAsset: boolean;
+  /** Haircut on quoted USDC (bps). 200 = credit 98% of Jupiter outAmount. */
+  gasCreditHaircutBps: number;
+  /**
+   * Allowlist for deposit assets (base58 mints; use "native" for SOL).
+   * Empty/unset → safe default (native + USDC [+ USDT on mainnet]), not open-ended.
+   */
+  gasCreditDepositMints: string[] | null;
+  /**
+   * Mint used as the USD quote currency for Jupiter (defaults to Circle mainnet USDC
+   * when cluster is mainnet; otherwise USDC_MINT).
+   */
+  gasQuoteUsdcMint: PublicKey | null;
 }
 
 function splitOrigins(raw: string | undefined): string[] {
@@ -66,6 +83,17 @@ export function loadConfig(): RelayerConfig {
     gasCreditFeeRaw: process.env.GAS_CREDIT_FEE_RAW || "10000", // 0.01 USDC @ 6 decimals
     gasTreasury: process.env.GAS_TREASURY
       ? new PublicKey(process.env.GAS_TREASURY)
+      : null,
+    gasMultiAsset: process.env.GAS_MULTI_ASSET !== "0",
+    gasCreditHaircutBps: (() => {
+      const n = Number(process.env.GAS_CREDIT_HAIRCUT_BPS || "200");
+      return Number.isFinite(n) ? n : 200;
+    })(),
+    gasCreditDepositMints: parseMintAllowlist(
+      process.env.GAS_CREDIT_DEPOSIT_MINTS,
+    ),
+    gasQuoteUsdcMint: process.env.GAS_QUOTE_USDC_MINT
+      ? new PublicKey(process.env.GAS_QUOTE_USDC_MINT)
       : null,
   };
 }

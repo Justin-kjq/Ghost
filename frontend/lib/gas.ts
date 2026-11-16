@@ -11,6 +11,9 @@ export type GasConfig = {
   creditFeeRaw: string;
   usdcMint: string | null;
   treasury: string | null;
+  multiAsset?: boolean;
+  creditHaircutBps?: number;
+  creditDepositMints?: string[];
 };
 
 function b64ToBytes(b64: string): Uint8Array {

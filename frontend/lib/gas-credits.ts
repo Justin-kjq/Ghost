@@ -1,30 +1,37 @@
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   getAssociatedTokenAddressSync,
   getMint,
-  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
   Connection,
   PublicKey,
+  SystemProgram,
   Transaction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import { createGasNote } from "@ghost/sdk";
-import {
-  CLUSTER,
-  MAINNET_USDC_MINT,
-  RELAYER_URL,
-  RPC_URL,
-  USDC_MINT_STR,
-  isMainnetCluster,
-} from "./config";
-import { DEVNET } from "./addresses";
+import { CLUSTER, RELAYER_URL, RPC_URL } from "./config";
 import { fetchGasConfig, toRawAmount } from "./gas";
 
 /** Scope notes by cluster so mainnet never mixes with mock-USDC notes. */
 const GAS_NOTES_KEY = `ghost.gasNotes.v1.${CLUSTER}`;
+
+export const NATIVE_SOL = "native";
+const MEMO_PROGRAM_ID = new PublicKey(
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+);
+
+function memoIx(signer: PublicKey, memo: string): TransactionInstruction {
+  return new TransactionInstruction({
+    keys: [{ pubkey: signer, isSigner: true, isWritable: true }],
+    programId: MEMO_PROGRAM_ID,
+    data: Buffer.from(memo, "utf8"),
+  });
+}
 
 export type StoredGasNote = {
   note: string;
@@ -33,6 +40,17 @@ export type StoredGasNote = {
   depositTx?: string;
   createdAt: string;
   remaining?: string;
+};
+
+export type CreditQuote = {
+  depositMint: string;
+  depositAmount: string;
+  creditRaw: string;
+  creditUi: string;
+  usdcOutRaw: string;
+  haircutBps: number;
+  routeLabel: string;
+  feePerTxRaw: string;
 };
 
 function readNotes(): StoredGasNote[] {
@@ -65,63 +83,111 @@ export function updateGasNoteRemaining(noteRaw: string, remaining: string) {
   );
 }
 
+export async function quoteGasCredit(params: {
+  mint: string;
+  amountRaw: string;
+}): Promise<CreditQuote> {
+  const res = await fetch(`${RELAYER_URL}/v1/gas/credits/quote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mint: params.mint, amount: params.amountRaw }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || "Quote failed");
+  return json as CreditQuote;
+}
+
 /**
- * X1 tops up prepaid gas: transfer USDC to Ghost treasury, register commitment, save gas note.
+ * X1 tops up prepaid gas with USDC, SOL, or any liquid SPL.
+ * Credit is priced to USD via Jupiter liquidity on the relayer.
  */
 export async function topUpGasCredits(params: {
   uiAmount: string;
+  mint: string;
+  decimals: number;
+  tokenProgramId?: string;
   publicKey: PublicKey;
   signTransaction: <T extends Transaction>(tx: T) => Promise<T>;
 }): Promise<StoredGasNote> {
   const gas = await fetchGasConfig();
   if (!gas.enabled) throw new Error("Ghost Gas is disabled");
-  if (!gas.treasury) throw new Error("Relayer treasury not configured");
-  if (!gas.usdcMint && !USDC_MINT_STR) throw new Error("USDC mint missing");
+  if (!gas.feePayer) throw new Error("Relayer fee payer missing");
 
-  const mintStr =
-    gas.usdcMint ||
-    USDC_MINT_STR ||
-    (isMainnetCluster() ? MAINNET_USDC_MINT : DEVNET.mint);
-  const connection = new Connection(RPC_URL, "confirmed");
-  const mint = new PublicKey(mintStr);
-  const treasury = new PublicKey(gas.treasury);
-  const mintAccount = await getMint(connection, mint, "confirmed", TOKEN_PROGRAM_ID);
-  const amountRaw = toRawAmount(params.uiAmount, mintAccount.decimals);
+  const mintKey = params.mint.trim() || NATIVE_SOL;
+  const isSol = mintKey === NATIVE_SOL || mintKey.toLowerCase() === "sol";
+  const amountRaw = toRawAmount(params.uiAmount, params.decimals);
   if (amountRaw === "0") throw new Error("Amount must be greater than zero");
 
-  const gasNote = await createGasNote(amountRaw);
+  const quote = await quoteGasCredit({
+    mint: isSol ? NATIVE_SOL : mintKey,
+    amountRaw,
+  });
 
-  const fromAta = getAssociatedTokenAddressSync(mint, params.publicKey);
-  const ixs = [];
+  const gasNote = await createGasNote(quote.creditRaw);
+  const connection = new Connection(RPC_URL, "confirmed");
+  const feePayer = new PublicKey(gas.feePayer);
+  // Memo binds this deposit to the commitment so others cannot front-run claim.
+  const ixs = [memoIx(params.publicKey, gasNote.commitment)];
 
-  // Anyone can create the relayer's USDC ATA (X1 pays rent once). Owner = fee payer.
-  const treasuryInfo = await connection.getAccountInfo(treasury);
-  if (!treasuryInfo) {
-    if (!gas.feePayer) {
-      throw new Error("Relayer fee payer missing from gas config");
+  if (isSol) {
+    ixs.push(
+      SystemProgram.transfer({
+        fromPubkey: params.publicKey,
+        toPubkey: feePayer,
+        lamports: BigInt(amountRaw),
+      }),
+    );
+  } else {
+    const mint = new PublicKey(mintKey);
+    const tokenProgram = params.tokenProgramId
+      ? new PublicKey(params.tokenProgramId)
+      : TOKEN_PROGRAM_ID;
+    const mintAccount = await getMint(
+      connection,
+      mint,
+      "confirmed",
+      tokenProgram,
+    );
+    const fromAta = getAssociatedTokenAddressSync(
+      mint,
+      params.publicKey,
+      false,
+      tokenProgram,
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+    );
+    const treasuryAta = getAssociatedTokenAddressSync(
+      mint,
+      feePayer,
+      false,
+      tokenProgram,
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+    );
+    const treasuryInfo = await connection.getAccountInfo(treasuryAta);
+    if (!treasuryInfo) {
+      ixs.push(
+        createAssociatedTokenAccountIdempotentInstruction(
+          params.publicKey,
+          treasuryAta,
+          feePayer,
+          mint,
+          tokenProgram,
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+        ),
+      );
     }
     ixs.push(
-      createAssociatedTokenAccountIdempotentInstruction(
-        params.publicKey,
-        treasury,
-        new PublicKey(gas.feePayer),
+      createTransferCheckedInstruction(
+        fromAta,
         mint,
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID,
+        treasuryAta,
+        params.publicKey,
+        BigInt(amountRaw),
+        mintAccount.decimals,
+        [],
+        tokenProgram,
       ),
     );
   }
-
-  ixs.push(
-    createTransferCheckedInstruction(
-      fromAta,
-      mint,
-      treasury,
-      params.publicKey,
-      BigInt(amountRaw),
-      mintAccount.decimals,
-    ),
-  );
 
   const tx = new Transaction().add(...ixs);
   tx.feePayer = params.publicKey;
@@ -137,18 +203,20 @@ export async function topUpGasCredits(params: {
       commitment: gasNote.commitment,
       amount: amountRaw,
       txSignature: depositTx,
+      mint: isSol ? NATIVE_SOL : mintKey,
     }),
   });
   const regJson = await reg.json();
   if (!reg.ok) throw new Error(regJson.error || "Credit registration failed");
 
+  const creditRaw = String(regJson.credit?.remaining ?? quote.creditRaw);
   const stored: StoredGasNote = {
     note: gasNote.raw,
     commitment: gasNote.commitment,
-    initialAmount: amountRaw,
+    initialAmount: creditRaw,
     depositTx,
     createdAt: new Date().toISOString(),
-    remaining: amountRaw,
+    remaining: creditRaw,
   };
   saveGasNote(stored);
   return stored;

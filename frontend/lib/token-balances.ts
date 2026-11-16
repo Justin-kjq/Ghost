@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -12,6 +12,8 @@ import {
 } from "./config";
 import { DEVNET } from "./addresses";
 import { shortAddr } from "./ghost";
+
+export const NATIVE_SOL_MINT = "native";
 
 export type WalletToken = {
   mint: string;
@@ -73,6 +75,22 @@ export async function fetchWalletTokens(owner: PublicKey): Promise<WalletToken[]
   return [...byMint.values()].sort((a, b) =>
     a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
   );
+}
+
+/** SOL (first) + SPL balances for credit top-up. */
+export async function fetchWalletAssets(owner: PublicKey): Promise<WalletToken[]> {
+  const connection = new Connection(RPC_URL, "confirmed");
+  const lamports = await connection.getBalance(owner);
+  const sol: WalletToken = {
+    mint: NATIVE_SOL_MINT,
+    amountRaw: String(lamports),
+    decimals: 9,
+    uiAmount: (lamports / LAMPORTS_PER_SOL).toString(),
+    label: "SOL",
+    programId: "native",
+  };
+  const tokens = await fetchWalletTokens(owner);
+  return [sol, ...tokens];
 }
 
 export function ataFor(mint: string, owner: PublicKey, programId?: string) {

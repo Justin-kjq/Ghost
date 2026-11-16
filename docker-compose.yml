@@ -21,6 +21,10 @@ services:
       GAS_ALLOWED_MINTS: ${GAS_ALLOWED_MINTS:-}
       GAS_CREDIT_FEE_RAW: ${GAS_CREDIT_FEE_RAW:-10000}
       GAS_TREASURY: ${GAS_TREASURY:-}
+      GAS_MULTI_ASSET: ${GAS_MULTI_ASSET:-1}
+      GAS_CREDIT_HAIRCUT_BPS: ${GAS_CREDIT_HAIRCUT_BPS:-200}
+      GAS_CREDIT_DEPOSIT_MINTS: ${GAS_CREDIT_DEPOSIT_MINTS:-}
+      GAS_QUOTE_USDC_MINT: ${GAS_QUOTE_USDC_MINT:-}
     volumes:
       # Host-generated solana-keygen 64-byte JSON array. Never bake this in.
       - ${RELAYER_KEYPAIR_PATH:-./.keys/relayer.json}:/keys/relayer.json:ro

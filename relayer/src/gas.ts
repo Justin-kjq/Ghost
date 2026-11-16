@@ -10,7 +10,6 @@ import {
 } from "@solana/spl-token";
 import {
   ComputeBudgetProgram,
-  Connection,
   PublicKey,
   Transaction,
   TransactionInstruction,
@@ -20,22 +19,29 @@ import { getConnection, loadRelayerKeypair } from "./solana.js";
 import { loadConfig } from "./config.js";
 import {
   assertGasNoteHasFee,
+  creditGasNoteFee,
   debitGasNoteFee,
+  effectiveDepositAllowlist,
   getGasTreasuryAta,
 } from "./gas-credits.js";
 
-/** Wallets often prepend SetComputeUnitLimit / SetComputeUnitPrice. */
 const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId;
 
-const ALLOWED_PROGRAMS = new Set([
-  TOKEN_PROGRAM_ID.toBase58(),
-  TOKEN_2022_PROGRAM_ID.toBase58(),
-  ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(),
-  COMPUTE_BUDGET_PROGRAM_ID.toBase58(),
-]);
+/** Matches prepare(); anything higher is rejected on submit. */
+export const GAS_CU_LIMIT = 200_000;
+export const GAS_CU_PRICE = 1_000;
 
-/** budget(2) + ATA create(1) + transfer(1) + possible wallet budget dupes */
-const MAX_SPONSORED_IXS = 6;
+/** TransferChecked + optional 1 ATA + 2 budget ixs. */
+const MAX_SPONSORED_IXS = 4;
+
+// spl-token instruction tags
+const TAG_TRANSFER = 3;
+const TAG_TRANSFER_CHECKED = 12;
+// associated-token-account: CreateIdempotent
+const ATA_CREATE_IDEMPOTENT = 1;
+// compute-budget
+const CB_SET_LIMIT = 2;
+const CB_SET_PRICE = 3;
 
 export type GasPrepareInput = {
   from: string;
@@ -55,6 +61,9 @@ export type GasConfigPublic = {
   creditFeeRaw: string;
   usdcMint: string | null;
   treasury: string | null;
+  multiAsset: boolean;
+  creditHaircutBps: number;
+  creditDepositMints: string[];
 };
 
 export function getGasPublicConfig(): GasConfigPublic {
@@ -74,6 +83,11 @@ export function getGasPublicConfig(): GasConfigPublic {
     creditFeeRaw: cfg.gasCreditFeeRaw,
     usdcMint: cfg.usdcMint?.toBase58() ?? null,
     treasury,
+    multiAsset: cfg.gasMultiAsset,
+    creditHaircutBps: Number.isFinite(cfg.gasCreditHaircutBps)
+      ? cfg.gasCreditHaircutBps
+      : 200,
+    creditDepositMints: effectiveDepositAllowlist(),
   };
 }
 
@@ -87,7 +101,7 @@ function assertPubkey(label: string, value: string): PublicKey {
 
 function parseAmount(raw: string): bigint {
   if (!/^\d+$/.test(raw) || raw === "0") {
-    throw Object.assign(new Error("amount must be a positive integer string (base units)"), {
+    throw Object.assign(new Error("amount must be a positive integer string"), {
       statusCode: 400,
     });
   }
@@ -105,7 +119,7 @@ function mintAllowed(mint: PublicKey): void {
 }
 
 async function resolveTokenProgram(
-  connection: Connection,
+  connection: ReturnType<typeof getConnection>,
   mint: PublicKey,
 ): Promise<PublicKey> {
   const info = await connection.getAccountInfo(mint);
@@ -119,8 +133,7 @@ async function resolveTokenProgram(
 }
 
 /**
- * Build an unsigned (fee-payer unset signature) SPL transfer tx.
- * Fee payer = Ghost relayer. User must sign as `from`.
+ * Build an unsigned SPL TransferChecked tx. Fee payer = Ghost relayer.
  */
 export async function prepareSponsoredTransfer(
   input: GasPrepareInput,
@@ -130,7 +143,7 @@ export async function prepareSponsoredTransfer(
     throw Object.assign(new Error("Ghost Gas is disabled"), { statusCode: 503 });
   }
   if (!input.gasNote?.trim()) {
-    throw Object.assign(new Error("gasNote required — top up credits with X1 first"), {
+    throw Object.assign(new Error("gasNote required; top up credits with X1 first"), {
       statusCode: 400,
     });
   }
@@ -179,9 +192,8 @@ export async function prepareSponsoredTransfer(
   }
 
   const ixs: TransactionInstruction[] = [
-    // Include budget ixs ourselves so wallets are less likely to inject extras.
-    ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
-    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 }),
+    ComputeBudgetProgram.setComputeUnitLimit({ units: GAS_CU_LIMIT }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: GAS_CU_PRICE }),
   ];
   const destInfo = await connection.getAccountInfo(toAta);
   if (!destInfo) {
@@ -226,18 +238,25 @@ export async function prepareSponsoredTransfer(
   };
 }
 
+function readU32LE(data: Buffer, offset: number): number {
+  return data.readUInt32LE(offset);
+}
+
 function readU64LE(data: Buffer, offset: number): bigint {
   return data.readBigUInt64LE(offset);
 }
 
 /**
- * Ensure a user-signed tx is only an allowlisted sponsored SPL transfer
- * with Ghost as fee payer.
+ * Strict sponsored-tx policy:
+ * - feePayer = relayer
+ * - only ComputeBudget (capped), one CreateIdempotent ATA for transfer dest, one TransferChecked
+ * - no Approve / SetAuthority / Transfer / etc.
+ * - relayer must not appear in TransferChecked keys (not authority/source)
  */
 export function assertSponsoredTransferTx(
   tx: Transaction,
   relayer: Keypair,
-): { from: PublicKey; mint: PublicKey } {
+): { from: PublicKey; mint: PublicKey; destAta: PublicKey } {
   if (!tx.feePayer || !tx.feePayer.equals(relayer.publicKey)) {
     throw Object.assign(new Error("feePayer must be the Ghost relayer"), {
       statusCode: 400,
@@ -253,82 +272,185 @@ export function assertSponsoredTransferTx(
     );
   }
 
-  for (const ix of tx.instructions) {
-    if (!ALLOWED_PROGRAMS.has(ix.programId.toBase58())) {
-      throw Object.assign(
-        new Error(`Program not allowlisted: ${ix.programId.toBase58()}`),
-        { statusCode: 400 },
-      );
-    }
-  }
-
-  // Transfer / TransferChecked discriminators (spl-token)
-  // Transfer = 3, TransferChecked = 12
   let transferIx: TransactionInstruction | null = null;
+  let ataIx: TransactionInstruction | null = null;
+  let sawLimit = false;
+  let sawPrice = false;
+
   for (const ix of tx.instructions) {
     const prog = ix.programId.toBase58();
-    if (prog !== TOKEN_PROGRAM_ID.toBase58() && prog !== TOKEN_2022_PROGRAM_ID.toBase58()) {
+
+    if (prog === COMPUTE_BUDGET_PROGRAM_ID.toBase58()) {
+      const tag = ix.data[0];
+      if (tag === CB_SET_LIMIT) {
+        if (ix.data.length < 5) {
+          throw Object.assign(new Error("Malformed compute budget limit"), {
+            statusCode: 400,
+          });
+        }
+        const units = readU32LE(Buffer.from(ix.data), 1);
+        if (units > GAS_CU_LIMIT) {
+          throw Object.assign(
+            new Error(`Compute unit limit ${units} exceeds max ${GAS_CU_LIMIT}`),
+            { statusCode: 400 },
+          );
+        }
+        sawLimit = true;
+        continue;
+      }
+      if (tag === CB_SET_PRICE) {
+        if (ix.data.length < 9) {
+          throw Object.assign(new Error("Malformed compute budget price"), {
+            statusCode: 400,
+          });
+        }
+        const price = readU64LE(Buffer.from(ix.data), 1);
+        if (price > BigInt(GAS_CU_PRICE)) {
+          throw Object.assign(
+            new Error(`Priority fee ${price} exceeds max ${GAS_CU_PRICE}`),
+            { statusCode: 400 },
+          );
+        }
+        sawPrice = true;
+        continue;
+      }
+      throw Object.assign(new Error("Unsupported compute budget instruction"), {
+        statusCode: 400,
+      });
+    }
+
+    if (prog === ASSOCIATED_TOKEN_PROGRAM_ID.toBase58()) {
+      if (ataIx) {
+        throw Object.assign(new Error("Only one ATA creation allowed"), {
+          statusCode: 400,
+        });
+      }
+      // CreateIdempotent = 1; empty data also used by some create variants — require tag 1
+      const tag = ix.data.length ? ix.data[0] : ATA_CREATE_IDEMPOTENT;
+      if (tag !== ATA_CREATE_IDEMPOTENT) {
+        throw Object.assign(new Error("Only idempotent ATA creation is allowed"), {
+          statusCode: 400,
+        });
+      }
+      const payer = ix.keys[0]?.pubkey;
+      if (!payer || !payer.equals(relayer.publicKey)) {
+        throw Object.assign(new Error("ATA creation must be paid by Ghost relayer"), {
+          statusCode: 400,
+        });
+      }
+      ataIx = ix;
       continue;
     }
-    const tag = ix.data[0];
-    if (tag === 3 || tag === 12) {
+
+    if (
+      prog === TOKEN_PROGRAM_ID.toBase58() ||
+      prog === TOKEN_2022_PROGRAM_ID.toBase58()
+    ) {
+      const tag = ix.data[0];
+      if (tag === TAG_TRANSFER) {
+        throw Object.assign(
+          new Error("Plain Transfer is not allowed; use TransferChecked"),
+          { statusCode: 400 },
+        );
+      }
+      if (tag !== TAG_TRANSFER_CHECKED) {
+        throw Object.assign(
+          new Error(
+            `Token instruction ${tag} is not allowed (TransferChecked only)`,
+          ),
+          { statusCode: 400 },
+        );
+      }
       if (transferIx) {
         throw Object.assign(new Error("Only one token transfer allowed per tx"), {
           statusCode: 400,
         });
       }
       transferIx = ix;
+      continue;
     }
-  }
 
-  if (!transferIx) {
-    throw Object.assign(new Error("Missing SPL token transfer instruction"), {
+    throw Object.assign(new Error(`Program not allowlisted: ${prog}`), {
       statusCode: 400,
     });
   }
 
-  // TransferChecked accounts: [source, mint, dest, owner, ...]
-  // Transfer accounts: [source, dest, owner, ...]
-  const tag = transferIx.data[0];
-  const mint =
-    tag === 12
-      ? transferIx.keys[1]?.pubkey
-      : null;
-  const owner =
-    tag === 12 ? transferIx.keys[3]?.pubkey : transferIx.keys[2]?.pubkey;
-
-  if (!owner) {
-    throw Object.assign(new Error("Malformed transfer instruction"), { statusCode: 400 });
+  if (!transferIx) {
+    throw Object.assign(new Error("Missing SPL TransferChecked instruction"), {
+      statusCode: 400,
+    });
+  }
+  if (!sawLimit || !sawPrice) {
+    throw Object.assign(
+      new Error("Compute budget limit and price instructions are required"),
+      { statusCode: 400 },
+    );
   }
 
-  // Owner must have signed (partial signature present)
+  // TransferChecked: [source, mint, dest, owner, ...]
+  const source = transferIx.keys[0]?.pubkey;
+  const mint = transferIx.keys[1]?.pubkey;
+  const destAta = transferIx.keys[2]?.pubkey;
+  const owner = transferIx.keys[3]?.pubkey;
+  if (!source || !mint || !destAta || !owner) {
+    throw Object.assign(new Error("Malformed TransferChecked instruction"), {
+      statusCode: 400,
+    });
+  }
+
+  // Relayer must not be token authority or source (prevents Approve-style abuse
+  // and signing as treasury).
+  for (const meta of transferIx.keys) {
+    if (meta.pubkey.equals(relayer.publicKey)) {
+      throw Object.assign(
+        new Error("Relayer must not appear in TransferChecked accounts"),
+        { statusCode: 400 },
+      );
+    }
+  }
+
   const ownerSig = tx.signatures.find((s) => s.publicKey.equals(owner));
   if (!ownerSig?.signature) {
     throw Object.assign(new Error("Token owner signature missing"), { statusCode: 400 });
   }
 
-  if (mint) mintAllowed(mint);
+  mintAllowed(mint);
 
-  // Optional amount sanity for TransferChecked (u64 at offset 1)
-  if (tag === 12 && transferIx.data.length >= 9) {
+  if (transferIx.data.length >= 9) {
     const amount = readU64LE(Buffer.from(transferIx.data), 1);
     if (amount <= 0n) {
-      throw Object.assign(new Error("Transfer amount must be positive"), { statusCode: 400 });
-    }
-  }
-
-  // ATA creates must be paid by relayer
-  for (const ix of tx.instructions) {
-    if (!ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)) continue;
-    const payer = ix.keys[0]?.pubkey;
-    if (!payer || !payer.equals(relayer.publicKey)) {
-      throw Object.assign(new Error("ATA creation must be paid by Ghost relayer"), {
+      throw Object.assign(new Error("Transfer amount must be positive"), {
         statusCode: 400,
       });
     }
   }
 
-  return { from: owner, mint: mint ?? PublicKey.default };
+  if (ataIx) {
+    const createdAta = ataIx.keys[1]?.pubkey;
+    const ataOwner = ataIx.keys[2]?.pubkey;
+    const ataMint = ataIx.keys[3]?.pubkey;
+    if (!createdAta || !ataOwner || !ataMint) {
+      throw Object.assign(new Error("Malformed ATA instruction"), { statusCode: 400 });
+    }
+    if (!createdAta.equals(destAta)) {
+      throw Object.assign(
+        new Error("ATA creation must be for the transfer destination only"),
+        { statusCode: 400 },
+      );
+    }
+    if (!ataMint.equals(mint)) {
+      throw Object.assign(new Error("ATA mint must match transfer mint"), {
+        statusCode: 400,
+      });
+    }
+    if (ataOwner.equals(relayer.publicKey)) {
+      throw Object.assign(new Error("Cannot create ATA owned by the relayer"), {
+        statusCode: 400,
+      });
+    }
+  }
+
+  return { from: owner, mint, destAta };
 }
 
 export async function submitSponsoredTransfer(
@@ -343,7 +465,8 @@ export async function submitSponsoredTransfer(
     throw Object.assign(new Error("gasNote required"), { statusCode: 400 });
   }
 
-  await assertGasNoteHasFee(gasNoteRaw.trim());
+  const note = gasNoteRaw.trim();
+  await assertGasNoteHasFee(note);
 
   let tx: Transaction;
   try {
@@ -355,16 +478,25 @@ export async function submitSponsoredTransfer(
   const relayer = loadRelayerKeypair();
   assertSponsoredTransferTx(tx, relayer);
 
+  // Debit first (serialized) so concurrent submits cannot overspend.
+  const afterDebit = await debitGasNoteFee(note);
+
   tx.partialSign(relayer);
-
   const connection = getConnection();
-  const raw = tx.serialize();
-  const signature = await connection.sendRawTransaction(raw, {
-    skipPreflight: false,
-    preflightCommitment: "confirmed",
-  });
-  await connection.confirmTransaction(signature, "confirmed");
-
-  const credit = await debitGasNoteFee(gasNoteRaw.trim());
-  return { signature, creditRemaining: credit.remaining };
+  try {
+    const raw = tx.serialize();
+    const signature = await connection.sendRawTransaction(raw, {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    });
+    await connection.confirmTransaction(signature, "confirmed");
+    return { signature, creditRemaining: afterDebit.remaining };
+  } catch (err) {
+    try {
+      await creditGasNoteFee(note);
+    } catch {
+      /* best-effort refund */
+    }
+    throw err;
+  }
 }

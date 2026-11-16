@@ -10,10 +10,81 @@ import {
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createApproveInstruction,
   createTransferCheckedInstruction,
 } from "@solana/spl-token";
-import { assertSponsoredTransferTx } from "../src/gas.js";
+import {
+  GAS_CU_LIMIT,
+  GAS_CU_PRICE,
+  assertSponsoredTransferTx,
+} from "../src/gas.js";
 import { resetRateLimits, takeRateLimit } from "../src/gas-rate-limit.js";
+
+function signedTransferChecked(opts?: {
+  cuLimit?: number;
+  cuPrice?: number;
+  withAta?: boolean;
+  extraApprove?: boolean;
+}) {
+  const relayer = Keypair.generate();
+  const owner = Keypair.generate();
+  const mint = Keypair.generate().publicKey;
+  const source = Keypair.generate().publicKey;
+  const dest = Keypair.generate().publicKey;
+  const toWallet = Keypair.generate().publicKey;
+
+  const ixs = [
+    ComputeBudgetProgram.setComputeUnitLimit({
+      units: opts?.cuLimit ?? GAS_CU_LIMIT,
+    }),
+    ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: opts?.cuPrice ?? GAS_CU_PRICE,
+    }),
+  ];
+  if (opts?.withAta) {
+    ixs.push(
+      createAssociatedTokenAccountIdempotentInstruction(
+        relayer.publicKey,
+        dest,
+        toWallet,
+        mint,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+      ),
+    );
+  }
+  if (opts?.extraApprove) {
+    ixs.push(
+      createApproveInstruction(
+        source,
+        owner.publicKey,
+        owner.publicKey,
+        1n,
+        [],
+        TOKEN_PROGRAM_ID,
+      ),
+    );
+  }
+  ixs.push(
+    createTransferCheckedInstruction(
+      source,
+      mint,
+      dest,
+      owner.publicKey,
+      1_000_000n,
+      6,
+      [],
+      TOKEN_PROGRAM_ID,
+    ),
+  );
+
+  const tx = new Transaction().add(...ixs);
+  tx.feePayer = relayer.publicKey;
+  tx.recentBlockhash = "11111111111111111111111111111111";
+  tx.partialSign(owner);
+  return { tx, relayer, owner, mint, dest };
+}
 
 describe("Ghost Gas", () => {
   it("rate-limits per key", () => {
@@ -35,8 +106,6 @@ describe("Ghost Gas", () => {
       }),
     );
     tx.feePayer = stranger.publicKey;
-    tx.recentBlockhash = Keypair.generate().publicKey.toBase58().slice(0, 32).padEnd(32, "1");
-    // recentBlockhash needs real base58 32-byte - use a valid one from a pubkey
     tx.recentBlockhash = Keypair.generate().publicKey.toBase58();
 
     assert.throws(
@@ -49,6 +118,8 @@ describe("Ghost Gas", () => {
     const relayer = Keypair.generate();
     const user = Keypair.generate();
     const tx = new Transaction().add(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: GAS_CU_LIMIT }),
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: GAS_CU_PRICE }),
       SystemProgram.transfer({
         fromPubkey: user.publicKey,
         toPubkey: Keypair.generate().publicKey,
@@ -56,74 +127,41 @@ describe("Ghost Gas", () => {
       }),
     );
     tx.feePayer = relayer.publicKey;
-    tx.recentBlockhash = PublicKey.default.toBase58();
-    // SystemProgram transfer won't have a valid blockhash for serialize but we only assert structure
-    // Need a blockhash-looking string — PublicKey.default is all 1s in base58? Actually default is 111..1
     tx.recentBlockhash = "11111111111111111111111111111111";
 
     assert.throws(() => assertSponsoredTransferTx(tx, relayer), /not allowlisted|Missing SPL/);
   });
 
   it("accepts a TransferChecked shaped tx signed by owner", () => {
-    const relayer = Keypair.generate();
-    const owner = Keypair.generate();
-    const mint = Keypair.generate().publicKey;
-    const source = Keypair.generate().publicKey;
-    const dest = Keypair.generate().publicKey;
-
-    const ix = createTransferCheckedInstruction(
-      source,
-      mint,
-      dest,
-      owner.publicKey,
-      1_000_000n,
-      6,
-      [],
-      TOKEN_PROGRAM_ID,
-    );
-    // Ensure ATA program isn't required
-    assert.ok(ix.programId.equals(TOKEN_PROGRAM_ID));
-    assert.ok(!ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID));
-
-    const tx = new Transaction().add(ix);
-    tx.feePayer = relayer.publicKey;
-    tx.recentBlockhash = "11111111111111111111111111111111";
-    tx.partialSign(owner);
-
+    const { tx, relayer, owner, mint } = signedTransferChecked();
     const out = assertSponsoredTransferTx(tx, relayer);
     assert.equal(out.from.toBase58(), owner.publicKey.toBase58());
     assert.equal(out.mint.toBase58(), mint.toBase58());
   });
 
-  it("accepts compute-budget instructions alongside the transfer", () => {
-    const relayer = Keypair.generate();
-    const owner = Keypair.generate();
-    const mint = Keypair.generate().publicKey;
-    const source = Keypair.generate().publicKey;
-    const dest = Keypair.generate().publicKey;
-
-    const transfer = createTransferCheckedInstruction(
-      source,
-      mint,
-      dest,
-      owner.publicKey,
-      1n,
-      6,
-      [],
-      TOKEN_PROGRAM_ID,
-    );
-    const tx = new Transaction().add(
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
-      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 }),
-      // wallet-style duplicate budget ix should still be fine within cap
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 250_000 }),
-      transfer,
-    );
-    tx.feePayer = relayer.publicKey;
-    tx.recentBlockhash = "11111111111111111111111111111111";
-    tx.partialSign(owner);
-
+  it("accepts one ATA create for the transfer destination", () => {
+    const { tx, relayer, owner } = signedTransferChecked({ withAta: true });
     const out = assertSponsoredTransferTx(tx, relayer);
     assert.equal(out.from.toBase58(), owner.publicKey.toBase58());
+  });
+
+  it("rejects inflated priority fees", () => {
+    const { tx, relayer } = signedTransferChecked({ cuPrice: GAS_CU_PRICE + 1 });
+    assert.throws(() => assertSponsoredTransferTx(tx, relayer), /Priority fee/);
+  });
+
+  it("rejects Approve and other token instructions", () => {
+    const { tx, relayer } = signedTransferChecked({ extraApprove: true });
+    assert.throws(
+      () => assertSponsoredTransferTx(tx, relayer),
+      /not allowed|instruction count/,
+    );
+  });
+
+  it("rejects compute budget above prepare caps", () => {
+    const { tx, relayer } = signedTransferChecked({
+      cuLimit: GAS_CU_LIMIT + 1,
+    });
+    assert.throws(() => assertSponsoredTransferTx(tx, relayer), /Compute unit limit/);
   });
 });
