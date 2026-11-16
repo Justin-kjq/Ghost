@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeFileAtomic } from "./atomic-write.js";
 import {
   buildMerkleTree,
   getMerklePath,
@@ -39,8 +40,7 @@ function loadFromDisk(): StoredDeposit[] {
 function saveToDisk(deposits: StoredDeposit[]) {
   const file = dataFile();
   if (!file) return;
-  mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, JSON.stringify(deposits, null, 2));
+  writeFileAtomic(file, JSON.stringify(deposits, null, 2));
 }
 
 export function listDeposits(): StoredDeposit[] {

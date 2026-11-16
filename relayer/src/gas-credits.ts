@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeFileAtomic } from "./atomic-write.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
@@ -74,9 +75,7 @@ function loadCredits() {
 }
 
 function saveCredits() {
-  const file = creditsFile();
-  mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, JSON.stringify(credits, null, 2));
+  writeFileAtomic(creditsFile(), JSON.stringify(credits, null, 2));
 }
 
 function normCommitment(c: string): string {
