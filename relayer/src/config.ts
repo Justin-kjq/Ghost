@@ -70,16 +70,28 @@ export function loadConfig(): RelayerConfig {
   };
 }
 
+function explorerClusterQuery(cluster: string): string {
+  if (
+    cluster === "localnet" ||
+    cluster === "custom" ||
+    cluster === "mainnet-beta" ||
+    cluster === "mainnet"
+  ) {
+    return "";
+  }
+  return `?cluster=${cluster}`;
+}
+
 export function explorerTx(signature: string, cluster: string): string {
   if (cluster === "localnet" || cluster === "custom") {
     return signature;
   }
-  return `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${explorerClusterQuery(cluster)}`;
 }
 
 export function explorerAddress(address: string, cluster: string): string {
   if (cluster === "localnet" || cluster === "custom") {
     return address;
   }
-  return `https://explorer.solana.com/address/${address}?cluster=${cluster}`;
+  return `https://explorer.solana.com/address/${address}${explorerClusterQuery(cluster)}`;
 }

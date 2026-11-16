@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { redirect } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,8 +16,10 @@ import {
 import { exportNotes, importNotes, listNotes, type StoredNote } from "@/lib/notes";
 import { shortAddr } from "@/lib/ghost";
 import { PageHeader } from "@/components/page-header";
+import { SHIELD_ENABLED } from "@/lib/config";
 
 export default function NotesPage() {
+  if (!SHIELD_ENABLED) redirect("/app/send");
   const [notes, setNotes] = useState<StoredNote[]>([]);
   const [importText, setImportText] = useState("");
 

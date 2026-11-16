@@ -26,19 +26,22 @@ const metadata = {
 
 const solanaAdapter = new SolanaAdapter();
 
-const defaultNetwork =
-  CLUSTER === "mainnet-beta" || CLUSTER === "mainnet"
-    ? solana
-    : CLUSTER === "testnet"
-      ? solanaTestnet
-      : solanaDevnet;
+const onMainnet = CLUSTER === "mainnet-beta" || CLUSTER === "mainnet";
+const defaultNetwork = onMainnet
+  ? solana
+  : CLUSTER === "testnet"
+    ? solanaTestnet
+    : solanaDevnet;
 
+// Production: expose only the active cluster so wallets don't offer the wrong net.
 // Cross-package AppKitNetwork vs viem Chain typing needs a wide cast.
-const networks = [solanaDevnet, solanaTestnet, solana] as unknown as [
-  typeof solanaDevnet,
-  typeof solanaTestnet,
-  typeof solana,
-];
+const networks = (
+  onMainnet
+    ? [solana]
+    : CLUSTER === "testnet"
+      ? [solanaTestnet, solanaDevnet]
+      : [solanaDevnet, solanaTestnet, solana]
+) as unknown as [typeof solana];
 
 /**
  * Initialize at module scope (client bundle) so AppKit hooks work.

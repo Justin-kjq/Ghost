@@ -4,6 +4,10 @@
 
 **Ghost Gas:** X1 prepays USDC for gas credits (gas note). X2 signs token transfers with **0 SOL**; Ghost pays the fee and **debits the note** — without X1 ever sending SOL to X2.
 
+## Mainnet
+
+Gas-first: `.env.mainnet.example` + `npm run mainnet:preflight`. Circle USDC mint. `NEXT_PUBLIC_SHIELD_ENABLED=false` until pool is on-chain. Paid RPC required.
+
 ## Flow
 
 ```

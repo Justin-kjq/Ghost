@@ -16,6 +16,11 @@ services:
       RELAYER_KEYPAIR_PATH: /keys/relayer.json
       DATA_DIR: /data
       ALLOW_MOCK_PROOF: "0"
+      GAS_ENABLED: ${GAS_ENABLED:-1}
+      GAS_MAX_PER_HOUR: ${GAS_MAX_PER_HOUR:-30}
+      GAS_ALLOWED_MINTS: ${GAS_ALLOWED_MINTS:-}
+      GAS_CREDIT_FEE_RAW: ${GAS_CREDIT_FEE_RAW:-10000}
+      GAS_TREASURY: ${GAS_TREASURY:-}
     volumes:
       # Host-generated solana-keygen 64-byte JSON array. Never bake this in.
       - ${RELAYER_KEYPAIR_PATH:-./.keys/relayer.json}:/keys/relayer.json:ro
@@ -43,6 +48,9 @@ services:
         NEXT_PUBLIC_PROGRAM_ID: ${NEXT_PUBLIC_PROGRAM_ID:-69gepJRrDXGgaKExaUHWmDjtLe4LHxTrNiGVzBGoTczR}
         NEXT_PUBLIC_USDC_MINT: ${NEXT_PUBLIC_USDC_MINT:-}
         NEXT_PUBLIC_ENABLE_DEV_WALLET: ${NEXT_PUBLIC_ENABLE_DEV_WALLET:-false}
+        NEXT_PUBLIC_SHIELD_ENABLED: ${NEXT_PUBLIC_SHIELD_ENABLED:-}
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://ghost.arnabbhowmik.in}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:

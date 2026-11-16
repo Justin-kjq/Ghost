@@ -265,6 +265,14 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+/* App workspace — quiet enter for primary column */
+.app-workspace > header {
+  animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.app-workspace > div {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
+}
+
 /* type scale, measured from the reference */
 .t-68 { font-size: clamp(44px, 4.72vw, 68px); line-height: 1.1; letter-spacing: -0.04em; font-weight: 400; }
 .t-64 { font-size: clamp(44px, 4.44vw, 64px); line-height: 1.1; letter-spacing: -0.04em; font-weight: 400; }

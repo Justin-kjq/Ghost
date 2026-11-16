@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { redirect } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useGhostWallet } from "@/hooks/useGhostWallet";
-import { CLUSTER } from "@/lib/config";
+import { CLUSTER, SHIELD_ENABLED } from "@/lib/config";
 import { recordActivity, explorerTx } from "@/lib/activity";
 import { depositUsdc } from "@/lib/ghost";
 import { saveNote } from "@/lib/notes";
 import { PageHeader } from "@/components/page-header";
 
 export default function DepositPage() {
+  if (!SHIELD_ENABLED) redirect("/app/send");
   const { publicKey, signTransaction, anchorWallet } = useGhostWallet();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");

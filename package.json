@@ -25,7 +25,8 @@
     "test:anchor": "bash scripts/build_program.sh && anchor test --skip-build",
     "test:e2e": "tsx scripts/e2e_local.ts",
     "test:e2e:devnet": "tsx scripts/e2e_devnet.ts",
-    "set:relayer": "tsx scripts/set_relayer.ts"
+    "set:relayer": "tsx scripts/set_relayer.ts",
+    "mainnet:preflight": "node scripts/mainnet-preflight.mjs"
   },
   "devDependencies": {
     "@coral-xyz/anchor": "^0.30.1",

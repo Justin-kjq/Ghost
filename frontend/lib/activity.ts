@@ -34,5 +34,8 @@ export function recordActivity(item: ActivityItem) {
 
 export function explorerTx(signature: string, cluster: string) {
   if (cluster === "localnet" || cluster === "custom") return signature;
+  if (cluster === "mainnet-beta" || cluster === "mainnet") {
+    return `https://explorer.solana.com/tx/${signature}`;
+  }
   return `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`;
 }

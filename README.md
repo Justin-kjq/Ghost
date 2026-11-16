@@ -97,7 +97,9 @@ Program, mock USDC, and pool are on **Solana Devnet**. `pool.relayer` is the hos
 
 ## Devnet / testnet (from scratch)
 
-Never mainnet. Use a throwaway keypair with **test SOL only**.
+**Mainnet (Gas-first):** copy `.env.mainnet.example` → host `.env`, fund a dedicated relayer with real SOL, use a paid RPC + Circle USDC `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`, run `npm run mainnet:preflight`, then rebuild compose. Shield stays off until the pool is deployed. Relayer is trusted for gas debit — treat the key like production custody.
+
+Devnet / local: use a throwaway keypair with **test SOL only**.
 
 ```bash
 solana config set --url devnet

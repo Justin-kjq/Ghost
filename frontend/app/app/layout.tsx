@@ -1,5 +1,6 @@
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { AppTopbar } from "@/components/app-topbar";
 import { WalletGuard } from "@/components/wallet-guard";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -9,10 +10,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset className="bg-cream">
-            <div className="flex items-center border-b border-ink/15 bg-paper px-4 py-3 md:px-6 md:hidden">
-              <SidebarTrigger className="rounded-none border border-ink/15 bg-transparent hover:bg-sand" />
+            <AppTopbar />
+            <div className="flex-1 px-4 py-8 sm:px-6 md:px-8 md:py-10">
+              {children}
             </div>
-            <div className="flex-1 px-5 py-10 md:px-10 md:py-12">{children}</div>
           </SidebarInset>
         </SidebarProvider>
       </div>

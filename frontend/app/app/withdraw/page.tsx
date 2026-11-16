@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { redirect } from "next/navigation";
 import { Keypair } from "@solana/web3.js";
 import { toast } from "sonner";
 import { useGhostWallet } from "@/hooks/useGhostWallet";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { CLUSTER } from "@/lib/config";
+import { CLUSTER, SHIELD_ENABLED } from "@/lib/config";
 import { explorerTx, recordActivity } from "@/lib/activity";
 import { withdrawWithNote, type WithdrawStep } from "@/lib/ghost";
 import { listNotes, markNoteSpent } from "@/lib/notes";
@@ -24,6 +25,7 @@ const STEPS: { id: WithdrawStep; label: string }[] = [
 ];
 
 export default function WithdrawPage() {
+  if (!SHIELD_ENABLED) redirect("/app/send");
   const wallet = useGhostWallet();
   const [note, setNote] = useState("");
   const [hasStored, setHasStored] = useState(false);

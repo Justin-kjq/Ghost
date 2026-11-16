@@ -42,5 +42,13 @@
     "depositTx": "",
     "withdrawTx": "",
     "note": "solana airdrop on testnet failed (faucet closed / rate limited). Operator has 0 testnet SOL. Not deployed."
+  },
+  "mainnet-beta": {
+    "programId": "",
+    "usdcMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "pool": "",
+    "vault": "",
+    "relayer": "",
+    "note": "Gas-first launch. Circle USDC mint. Pool program NOT deployed — NEXT_PUBLIC_SHIELD_ENABLED=false. Fill relayer pubkey after funding .keys/relayer-mainnet.json. Use paid RPC."
   }
 }

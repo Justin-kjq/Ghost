@@ -4,7 +4,12 @@ import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { RPC_URL, USDC_MINT_STR } from "./config";
+import {
+  MAINNET_USDC_MINT,
+  RPC_URL,
+  USDC_MINT_STR,
+  isMainnetCluster,
+} from "./config";
 import { DEVNET } from "./addresses";
 import { shortAddr } from "./ghost";
 
@@ -17,10 +22,12 @@ export type WalletToken = {
   programId: string;
 };
 
-const GHOST_USDC = USDC_MINT_STR || DEVNET.mint;
+const GHOST_USDC =
+  USDC_MINT_STR ||
+  (isMainnetCluster() ? MAINNET_USDC_MINT : DEVNET.mint);
 
 function labelForMint(mint: string): string {
-  if (mint === GHOST_USDC) return "USDC (Ghost)";
+  if (mint === GHOST_USDC || mint === MAINNET_USDC_MINT) return "USDC";
   return shortAddr(mint, 4);
 }
 

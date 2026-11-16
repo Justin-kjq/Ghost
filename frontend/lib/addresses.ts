@@ -1,4 +1,10 @@
-import { CLUSTER, PROGRAM_ID, USDC_MINT_STR } from "./config";
+import {
+  CLUSTER,
+  MAINNET_USDC_MINT,
+  PROGRAM_ID,
+  USDC_MINT_STR,
+  isMainnetCluster,
+} from "./config";
 
 export const GITHUB_REPO = "https://github.com/Arnab-Afk/Ghost";
 export const SITE_URL =
@@ -12,14 +18,34 @@ export const DEVNET = {
   vault: "GDhkKy7KupmP9w24XhinatErS8R6ejea95brgKX2z9uR",
 };
 
+export const MAINNET = {
+  /** Not deployed — Ghost Gas does not require the pool program. */
+  program: "",
+  mint: MAINNET_USDC_MINT,
+  pool: "",
+  vault: "",
+};
+
+/** Explorer cluster query — omit for mainnet so links resolve to production. */
+export function explorerClusterQuery(cluster = CLUSTER): string {
+  if (
+    cluster === "localnet" ||
+    cluster === "custom" ||
+    isMainnetCluster(cluster)
+  ) {
+    return "";
+  }
+  return `?cluster=${cluster}`;
+}
+
 export function explorerAddress(address: string) {
   if (CLUSTER === "localnet" || CLUSTER === "custom") return address;
-  return `https://explorer.solana.com/address/${address}?cluster=${CLUSTER}`;
+  return `https://explorer.solana.com/address/${address}${explorerClusterQuery()}`;
 }
 
 export function explorerTx(signature: string) {
   if (CLUSTER === "localnet" || CLUSTER === "custom") return signature;
-  return `https://explorer.solana.com/tx/${signature}?cluster=${CLUSTER}`;
+  return `https://explorer.solana.com/tx/${signature}${explorerClusterQuery()}`;
 }
 
 export function publicProgramId() {
@@ -27,5 +53,8 @@ export function publicProgramId() {
 }
 
 export function publicMint() {
-  return USDC_MINT_STR || (CLUSTER === "devnet" ? DEVNET.mint : "");
+  if (USDC_MINT_STR) return USDC_MINT_STR;
+  if (CLUSTER === "devnet") return DEVNET.mint;
+  if (isMainnetCluster()) return MAINNET.mint;
+  return "";
 }

@@ -19,7 +19,7 @@ UI: `/app/credits` (X1 top-up), `/app/send` (X2 + note).
 
 ## Secondary: Ghost Shield
 
-Fixed 1 USDC private pool (deposit note → ZK withdraw). Optional private on-ramp — not the main story.
+Fixed 1 USDC private pool (deposit note → ZK withdraw). Optional private on-ramp — not the main story. **Mainnet:** leave Shield off (`NEXT_PUBLIC_SHIELD_ENABLED=false`) until the program is deployed; Gas does not need it.
 
 ## Trust
 

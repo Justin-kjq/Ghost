@@ -12,11 +12,19 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { createGasNote } from "@ghost/sdk";
-import { RELAYER_URL, RPC_URL, USDC_MINT_STR } from "./config";
+import {
+  CLUSTER,
+  MAINNET_USDC_MINT,
+  RELAYER_URL,
+  RPC_URL,
+  USDC_MINT_STR,
+  isMainnetCluster,
+} from "./config";
 import { DEVNET } from "./addresses";
 import { fetchGasConfig, toRawAmount } from "./gas";
 
-const GAS_NOTES_KEY = "ghost.gasNotes.v1";
+/** Scope notes by cluster so mainnet never mixes with mock-USDC notes. */
+const GAS_NOTES_KEY = `ghost.gasNotes.v1.${CLUSTER}`;
 
 export type StoredGasNote = {
   note: string;
@@ -70,7 +78,10 @@ export async function topUpGasCredits(params: {
   if (!gas.treasury) throw new Error("Relayer treasury not configured");
   if (!gas.usdcMint && !USDC_MINT_STR) throw new Error("USDC mint missing");
 
-  const mintStr = gas.usdcMint || USDC_MINT_STR || DEVNET.mint;
+  const mintStr =
+    gas.usdcMint ||
+    USDC_MINT_STR ||
+    (isMainnetCluster() ? MAINNET_USDC_MINT : DEVNET.mint);
   const connection = new Connection(RPC_URL, "confirmed");
   const mint = new PublicKey(mintStr);
   const treasury = new PublicKey(gas.treasury);
