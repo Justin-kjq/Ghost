@@ -9,6 +9,7 @@ import {
   getMint,
 } from "@solana/spl-token";
 import {
+  ComputeBudgetProgram,
   Connection,
   PublicKey,
   Transaction,
@@ -23,11 +24,18 @@ import {
   getGasTreasuryAta,
 } from "./gas-credits.js";
 
+/** Wallets often prepend SetComputeUnitLimit / SetComputeUnitPrice. */
+const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId;
+
 const ALLOWED_PROGRAMS = new Set([
   TOKEN_PROGRAM_ID.toBase58(),
   TOKEN_2022_PROGRAM_ID.toBase58(),
   ASSOCIATED_TOKEN_PROGRAM_ID.toBase58(),
+  COMPUTE_BUDGET_PROGRAM_ID.toBase58(),
 ]);
+
+/** budget(2) + ATA create(1) + transfer(1) + possible wallet budget dupes */
+const MAX_SPONSORED_IXS = 6;
 
 export type GasPrepareInput = {
   from: string;
@@ -170,7 +178,11 @@ export async function prepareSponsoredTransfer(
     });
   }
 
-  const ixs: TransactionInstruction[] = [];
+  const ixs: TransactionInstruction[] = [
+    // Include budget ixs ourselves so wallets are less likely to inject extras.
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 }),
+  ];
   const destInfo = await connection.getAccountInfo(toAta);
   if (!destInfo) {
     ixs.push(
@@ -232,10 +244,13 @@ export function assertSponsoredTransferTx(
     });
   }
 
-  if (!tx.instructions.length || tx.instructions.length > 3) {
-    throw Object.assign(new Error("Transaction has an unexpected instruction count"), {
-      statusCode: 400,
-    });
+  if (!tx.instructions.length || tx.instructions.length > MAX_SPONSORED_IXS) {
+    throw Object.assign(
+      new Error(
+        `Transaction has an unexpected instruction count (${tx.instructions.length}; max ${MAX_SPONSORED_IXS})`,
+      ),
+      { statusCode: 400 },
+    );
   }
 
   for (const ix of tx.instructions) {

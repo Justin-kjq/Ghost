@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -87,5 +93,37 @@ describe("Ghost Gas", () => {
     const out = assertSponsoredTransferTx(tx, relayer);
     assert.equal(out.from.toBase58(), owner.publicKey.toBase58());
     assert.equal(out.mint.toBase58(), mint.toBase58());
+  });
+
+  it("accepts compute-budget instructions alongside the transfer", () => {
+    const relayer = Keypair.generate();
+    const owner = Keypair.generate();
+    const mint = Keypair.generate().publicKey;
+    const source = Keypair.generate().publicKey;
+    const dest = Keypair.generate().publicKey;
+
+    const transfer = createTransferCheckedInstruction(
+      source,
+      mint,
+      dest,
+      owner.publicKey,
+      1n,
+      6,
+      [],
+      TOKEN_PROGRAM_ID,
+    );
+    const tx = new Transaction().add(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 }),
+      // wallet-style duplicate budget ix should still be fine within cap
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 250_000 }),
+      transfer,
+    );
+    tx.feePayer = relayer.publicKey;
+    tx.recentBlockhash = "11111111111111111111111111111111";
+    tx.partialSign(owner);
+
+    const out = assertSponsoredTransferTx(tx, relayer);
+    assert.equal(out.from.toBase58(), owner.publicKey.toBase58());
   });
 });
