@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { APP_URL, REPO_URL } from "@/lib/landing-site";
+import { APP_URL } from "@/lib/landing-site";
 import { TurnArrow, Wordmark } from "./marks";
 
 const links = [
   { href: "#how", label: "How it works" },
   { href: "#security", label: "Security" },
   { href: "#proof", label: "Proof" },
-  { href: REPO_URL, label: "Docs" },
+  { href: "/docs", label: "Docs" },
 ];
 
 export function Nav() {

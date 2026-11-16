@@ -519,7 +519,7 @@ export default function Home() {
             {[
               ["Launch app", APP_URL],
               ["GitHub", REPO_URL],
-              ["Documentation", REPO_URL],
+              ["Docs", "/docs"],
               ...LEGAL_PAGES.map((p) => [p.label, p.href] as const),
             ].map(([t, h]) => (
               <li key={t}>
