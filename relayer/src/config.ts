@@ -14,6 +14,15 @@ export interface RelayerConfig {
   allowMockProof: boolean;
   rootHistorySize: number;
   dataDir: string;
+  /** Ghost Gas: sponsor feePayer for allowlisted SPL transfers. */
+  gasEnabled: boolean;
+  gasMaxPerHour: number;
+  /** null = any SPL mint; otherwise allowlist of base58 mints. */
+  gasAllowedMints: string[] | null;
+  /** Flat USDC base-unit fee debited from prepaid gas note per sponsored tx. */
+  gasCreditFeeRaw: string;
+  /** Optional override for gas credit treasury ATA; default = relayer USDC ATA. */
+  gasTreasury: PublicKey | null;
 }
 
 function splitOrigins(raw: string | undefined): string[] {
@@ -23,6 +32,15 @@ function splitOrigins(raw: string | undefined): string[] {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+function parseMintAllowlist(raw: string | undefined): string[] | null {
+  if (raw === undefined || raw.trim() === "") return null;
+  const list = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return list.length ? list : null;
 }
 
 export function loadConfig(): RelayerConfig {
@@ -42,6 +60,13 @@ export function loadConfig(): RelayerConfig {
     allowMockProof: process.env.ALLOW_MOCK_PROOF === "1" && localhost,
     rootHistorySize: Number(process.env.ROOT_HISTORY_SIZE || 1024),
     dataDir: process.env.DATA_DIR || "",
+    gasEnabled: process.env.GAS_ENABLED !== "0",
+    gasMaxPerHour: Number(process.env.GAS_MAX_PER_HOUR || 30),
+    gasAllowedMints: parseMintAllowlist(process.env.GAS_ALLOWED_MINTS),
+    gasCreditFeeRaw: process.env.GAS_CREDIT_FEE_RAW || "10000", // 0.01 USDC @ 6 decimals
+    gasTreasury: process.env.GAS_TREASURY
+      ? new PublicKey(process.env.GAS_TREASURY)
+      : null,
   };
 }
 

@@ -1,0 +1,30 @@
+---
+description: Ghost product vision — prepaid Ghost Gas first, privacy pool secondary
+alwaysApply: true
+---
+
+# Ghost — what we are building
+
+## Core product (priority #1): Ghost Gas (prepaid)
+
+1. **X1** deposits USDC → Ghost treasury → gets a **gas note** (`ghost-gas:v1:…`).
+2. **X2** (tokens, often 0 SOL) wants to send to **A1**.
+3. X2 signs the SPL transfer and presents the **gas note**.
+4. Relayer is `feePayer` (pays SOL) and **debits the note** (flat USDC fee per send).
+
+No SOL from X1 → X2 (that link is the leak). X1 prepays Ghost; X2 spends the credit.
+
+APIs: `/v1/gas/credits/deposit`, `/v1/gas/prepare`, `/v1/gas/submit` (gasNote required).  
+UI: `/app/credits` (X1 top-up), `/app/send` (X2 + note).
+
+## Secondary: Ghost Shield
+
+Fixed 1 USDC private pool (deposit note → ZK withdraw). Optional private on-ramp — not the main story.
+
+## Trust
+
+Relayer-trusted for gas debit + withdraw. Malicious relayer risk is real. Keep allowlists/fees tight.
+
+## Copy
+
+Do not put “Devnet” in user-facing UI. Wallets via Reown AppKit (`useGhostWallet`).

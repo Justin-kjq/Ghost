@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GhostWordmark } from "@/components/ghost-mark";
 import { GITHUB_REPO } from "@/lib/addresses";
+import { LEGAL_PAGES } from "@/lib/legal";
 
 export function SiteFooter() {
   return (
@@ -15,27 +16,20 @@ export function SiteFooter() {
             <a href={GITHUB_REPO} target="_blank" rel="noreferrer" className="hover:text-foreground">
               GitHub
             </a>
-            <a
-              href={`${GITHUB_REPO}#readme`}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-foreground"
-            >
-              Docs
-            </a>
-            <a
-              href="https://solana.com"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-foreground"
-            >
-              Built on Solana
-            </a>
+            {LEGAL_PAGES.map((p) => (
+              <Link key={p.href} href={p.href} className="hover:text-foreground">
+                {p.label}
+              </Link>
+            ))}
           </div>
         </div>
         <p className="max-w-[70ch] text-sm leading-relaxed text-muted-foreground">
           Not financial advice. Ghost is an unaudited Lean MVP: Groth16 is verified off-chain,
-          and a malicious relayer can drain the vault.
+          and a malicious relayer can drain the vault. See the{" "}
+          <Link href="/risk" className="underline underline-offset-2">
+            Risk Disclosure
+          </Link>
+          .
         </p>
       </div>
     </footer>

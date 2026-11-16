@@ -8,6 +8,7 @@ import { ENABLE_DEV_WALLET } from "@/lib/config";
 import { Wordmark, TurnArrow } from "@/components/landing/marks";
 import { FlowDiagram } from "@/components/landing/FlowDiagram";
 import { GITHUB_REPO } from "@/lib/addresses";
+import { LEGAL_PAGES } from "@/lib/legal";
 
 type Kind = "wallet" | "dev";
 
@@ -96,14 +97,26 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <a
-          href={GITHUB_REPO}
-          target="_blank"
-          rel="noreferrer"
-          className="t-14 font-normal text-ink/45 hover:text-ink"
-        >
-          Get help on GitHub
-        </a>
+        <div className="space-y-3">
+          <a
+            href={GITHUB_REPO}
+            target="_blank"
+            rel="noreferrer"
+            className="t-14 block font-normal text-ink/45 hover:text-ink"
+          >
+            Get help on GitHub
+          </a>
+          <p className="t-14 flex flex-wrap gap-x-4 gap-y-2 font-normal text-ink/40">
+            {LEGAL_PAGES.map((p) => (
+              <Link key={p.href} href={p.href} className="hover:text-ink">
+                {p.label}
+              </Link>
+            ))}
+          </p>
+          <p className="t-14 max-w-[42ch] font-normal text-ink/35">
+            By connecting, you agree to the Terms and acknowledge the Risk Disclosure.
+          </p>
+        </div>
       </div>
 
       <div className="relative hidden min-h-screen overflow-hidden bg-night text-cream lg:block">

@@ -2,8 +2,8 @@
 
 Compliant-leaning **private USDC** transfers on **Solana** (localnet / Devnet / testnet).
 
-> Deposit 1 USDC → get a Ghost Note → withdraw later with a ZK proof.  
-> Recipient needs **0 SOL**. Relayer pays fees and verifies Groth16 **off-chain**.
+> **Ghost Gas:** X1 tops up USDC → gas note; X2 signs transfers with 0 SOL; Ghost pays fees and debits the note.  
+> **Ghost Shield (optional):** Deposit 1 USDC → Ghost Note → ZK withdraw to a fresh address.
 
 This is the Solana port of [Arnab-Afk/bnb](https://github.com/Arnab-Afk/bnb) (BNB Ghost Privacy Suite), stripped to a **Lean MVP**.
 

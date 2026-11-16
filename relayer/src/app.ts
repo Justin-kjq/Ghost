@@ -12,10 +12,29 @@ import {
   rebuildRoots,
   upsertDeposit,
 } from "./store.js";
-import { fetchCommitmentRecord, fetchPool, nullifierExists, submitWithdraw } from "./solana.js";
+import {
+  fetchCommitmentRecord,
+  fetchPool,
+  loadRelayerKeypair,
+  nullifierExists,
+  submitWithdraw,
+} from "./solana.js";
 import { syncFromChain } from "./sync.js";
 import { verifyProof } from "./zk.js";
 import { validateWithdrawInput } from "./validate.js";
+import {
+  getGasPublicConfig,
+  prepareSponsoredTransfer,
+  submitSponsoredTransfer,
+  type GasPrepareInput,
+} from "./gas.js";
+import { takeRateLimit } from "./gas-rate-limit.js";
+import {
+  configureGasCredits,
+  getGasTreasuryAta,
+  peekGasNoteBalance,
+  registerGasCreditDeposit,
+} from "./gas-credits.js";
 
 export interface RelayerHooks {
   verifyProof?: typeof verifyProof;
@@ -32,6 +51,7 @@ export async function buildApp(
 ): Promise<FastifyInstance> {
   const cfg = config ?? loadConfig();
   configureStore(cfg.dataDir || undefined);
+  configureGasCredits(cfg.dataDir || undefined);
 
   const verify = hooks.verifyProof ?? verifyProof;
   const withdraw = hooks.submitWithdraw ?? submitWithdraw;
@@ -54,14 +74,137 @@ export async function buildApp(
     },
   });
 
-  app.get("/health", async () => ({
-    ok: true,
-    service: "ghost-relayer",
-    cluster: cfg.cluster,
-    deposits: listDeposits().length,
-    root: getCurrentRoot() || null,
-    listen: `${cfg.host}:${cfg.port}`,
-  }));
+  app.get("/health", async () => {
+    let feePayer: string | null = null;
+    try {
+      feePayer = loadRelayerKeypair().publicKey.toBase58();
+    } catch {
+      feePayer = null;
+    }
+    return {
+      ok: true,
+      service: "ghost-relayer",
+      cluster: cfg.cluster,
+      deposits: listDeposits().length,
+      root: getCurrentRoot() || null,
+      listen: `${cfg.host}:${cfg.port}`,
+      gas: {
+        enabled: cfg.gasEnabled,
+        feePayer,
+      },
+    };
+  });
+
+  app.get("/v1/gas/config", async () => getGasPublicConfig());
+
+  app.post<{
+    Body: { commitment?: string; amount?: string; txSignature?: string };
+  }>("/v1/gas/credits/deposit", async (req, reply) => {
+    try {
+      const commitment = String(req.body?.commitment || "");
+      const amount = String(req.body?.amount || "");
+      const txSignature = String(req.body?.txSignature || "");
+      if (!commitment || !amount || !txSignature) {
+        return reply.code(400).send({
+          error: "commitment, amount, and txSignature required",
+        });
+      }
+      const credit = await registerGasCreditDeposit({
+        commitment,
+        amount,
+        txSignature,
+      });
+      let treasury: string | null = null;
+      try {
+        treasury = getGasTreasuryAta().toBase58();
+      } catch {
+        treasury = null;
+      }
+      return { credit, treasury };
+    } catch (err: any) {
+      const code =
+        err?.statusCode === 400 || err?.statusCode === 503 ? err.statusCode : 500;
+      req.log.error(err);
+      return reply.code(code).send({ error: err?.message ?? "credit deposit failed" });
+    }
+  });
+
+  app.post<{ Body: { gasNote?: string } }>("/v1/gas/credits/balance", async (req, reply) => {
+    try {
+      const gasNote = String(req.body?.gasNote || "");
+      if (!gasNote) return reply.code(400).send({ error: "gasNote required" });
+      return await peekGasNoteBalance(gasNote);
+    } catch (err: any) {
+      const code = err?.statusCode === 400 ? 400 : 500;
+      return reply.code(code).send({ error: err?.message ?? "balance failed" });
+    }
+  });
+
+  app.post<{ Body: GasPrepareInput }>("/v1/gas/prepare", async (req, reply) => {
+    try {
+      const body = req.body ?? ({} as GasPrepareInput);
+      const from = String(body.from || "");
+      const limit = takeRateLimit(`prepare:${from}`, cfg.gasMaxPerHour);
+      if (!limit.ok) {
+        return reply.code(429).send({
+          error: "Ghost Gas rate limit exceeded",
+          retryAfterSec: limit.retryAfterSec,
+        });
+      }
+      const prepared = await prepareSponsoredTransfer(body);
+      return prepared;
+    } catch (err: any) {
+      const code =
+        err?.statusCode === 400 ||
+        err?.statusCode === 402 ||
+        err?.statusCode === 503
+          ? err.statusCode
+          : 500;
+      req.log.error(err);
+      return reply.code(code).send({ error: err?.message ?? "gas prepare failed" });
+    }
+  });
+
+  app.post<{ Body: { transaction?: string; gasNote?: string } }>(
+    "/v1/gas/submit",
+    async (req, reply) => {
+      try {
+        const transaction = String(req.body?.transaction || "");
+        const gasNote = String(req.body?.gasNote || "");
+        if (!transaction) {
+          return reply.code(400).send({ error: "transaction (base64) required" });
+        }
+        if (!gasNote) {
+          return reply.code(400).send({ error: "gasNote required" });
+        }
+        const limit = takeRateLimit(`submit:${req.ip}`, cfg.gasMaxPerHour);
+        if (!limit.ok) {
+          return reply.code(429).send({
+            error: "Ghost Gas rate limit exceeded",
+            retryAfterSec: limit.retryAfterSec,
+          });
+        }
+        const { signature, creditRemaining } = await submitSponsoredTransfer(
+          transaction,
+          gasNote,
+        );
+        return {
+          signature,
+          explorer: explorerTx(signature, cfg.cluster),
+          creditRemaining,
+        };
+      } catch (err: any) {
+        const code =
+          err?.statusCode === 400 ||
+          err?.statusCode === 402 ||
+          err?.statusCode === 503
+            ? err.statusCode
+            : 500;
+        req.log.error(err);
+        return reply.code(code).send({ error: err?.message ?? "gas submit failed" });
+      }
+    },
+  );
 
   app.get("/v1/pool", async () => pool());
 

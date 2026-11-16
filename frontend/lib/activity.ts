@@ -1,7 +1,7 @@
 const ACTIVITY_KEY = "ghost.activity.v1";
 
 export type ActivityItem = {
-  kind: "deposit" | "withdraw";
+  kind: "deposit" | "withdraw" | "send";
   signature: string;
   explorer: string;
   at: string;

@@ -16,6 +16,7 @@ import {
   explorerTx,
   transactions,
 } from "@/lib/landing-site";
+import { LEGAL_PAGES } from "@/lib/legal";
 
 const pillars = [
   {
@@ -477,7 +478,7 @@ export default function Home() {
               ["Launch app", APP_URL],
               ["GitHub", REPO_URL],
               ["Documentation", REPO_URL],
-              ["Solana faucet", "https://faucet.solana.com"],
+              ...LEGAL_PAGES.map((p) => [p.label, p.href] as const),
             ].map(([t, h]) => (
               <li key={t}>
                 <a href={h} className="hover:opacity-60">
@@ -502,6 +503,13 @@ export default function Home() {
               ))}
             </div>
             <p className="t-14 mt-5 font-normal">© 2026 Ghost Privacy Suite.</p>
+            <p className="t-14 mt-3 flex flex-wrap gap-x-4 gap-y-2 font-normal text-cream/55">
+              {LEGAL_PAGES.map((p) => (
+                <a key={p.href} href={p.href} className="hover:text-cream">
+                  {p.label}
+                </a>
+              ))}
+            </p>
           </div>
 
           <div className="relative mt-10 min-h-[520px] md:mt-[40px]">

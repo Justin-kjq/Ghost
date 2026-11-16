@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowDownToLine, ArrowUpFromLine, Notebook } from "lucide-react";
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Notebook,
+  Send,
+  WalletCards,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +24,8 @@ import { Wordmark } from "@/components/landing/marks";
 import { WalletChip } from "@/components/wallet-chip";
 
 const items = [
+  { href: "/app/send", label: "Send", icon: Send },
+  { href: "/app/credits", label: "Credits", icon: WalletCards },
   { href: "/app/deposit", label: "Deposit", icon: ArrowDownToLine },
   { href: "/app/withdraw", label: "Withdraw", icon: ArrowUpFromLine },
   { href: "/app/notes", label: "Notes", icon: Notebook },

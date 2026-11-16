@@ -1,0 +1,13 @@
+---
+description: Conventions when changing Ghost Gas / prepaid fee-payer code
+globs: relayer/**/*.{ts,js},frontend/lib/gas*.ts,frontend/app/app/send/**/*,frontend/app/app/credits/**/*
+alwaysApply: false
+---
+
+# Ghost Gas implementation notes
+
+- Prepaid model: X1 tops up USDC → gas note; prepare/submit **require `gasNote`** and debit `GAS_CREDIT_FEE_RAW`.
+- Flow: `prepare` (check credit + build tx) → user signs → `submit` (send + debit note).
+- Allowlist: SPL transfer ± ATA create paid by relayer only.
+- Treasury default = relayer USDC ATA (`GAS_TREASURY` override).
+- UI: `/app/credits` (X1), `/app/send` (X2 + note).
