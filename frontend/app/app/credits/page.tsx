@@ -77,20 +77,17 @@ export default function CreditsPage() {
   return (
     <div className="mx-auto max-w-xl space-y-10">
       <PageHeader
-        tag="Gas credits"
-        title="X1 pays. X2 spends."
-        description="Deposit USDC from your main wallet (X1). You get a gas note. When X2 sends tokens, Ghost sponsors SOL and debits this note — no SOL bridge from X1 to X2."
+        tag="Credits"
+        title="Buy gas credit."
+        description="Pay once with USDC from your main wallet. Your other wallets can then send any token without holding SOL."
       />
 
       <p className="t-14 font-normal text-ink/55">
-        Fee per sponsored send: ~{feeUi} USDC (from the note). Treasury:{" "}
-        <span className="font-mono text-xs">
-          {gas?.treasury ? `${gas.treasury.slice(0, 4)}…${gas.treasury.slice(-4)}` : "—"}
-        </span>
+        About {feeUi} USDC deducted per send from this credit.
       </p>
 
       <section className="border border-ink/15 bg-paper p-6 md:p-8">
-        <Label htmlFor="credit-amount">Top up (USDC)</Label>
+        <Label htmlFor="credit-amount">Amount (USDC)</Label>
         <Input
           id="credit-amount"
           className="mt-2 rounded-none border-ink/15 bg-cream"
@@ -105,13 +102,13 @@ export default function CreditsPage() {
           onClick={onTopUp}
           data-testid="gas-credit-topup"
         >
-          {busy ? "Depositing…" : "Deposit USDC → get gas note"}
+          {busy ? "Confirm in wallet…" : "Continue"}
         </Button>
       </section>
 
       {lastNote && (
         <section className="border border-ink/15 border-l-4 border-l-sun bg-sun/30 p-6">
-          <span className="tag">Save your gas note</span>
+          <span className="tag">Your credit note</span>
           <p className="mt-4 break-all font-mono text-xs leading-relaxed">{lastNote}</p>
           <Button
             size="sm"

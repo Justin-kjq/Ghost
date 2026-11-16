@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
+import { PublicKey } from "@solana/web3.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PageHeader } from "@/components/page-header";
 import { useGhostWallet } from "@/hooks/useGhostWallet";
-import { USDC_MINT_STR } from "@/lib/config";
-import { DEVNET } from "@/lib/addresses";
 import {
   fetchGasConfig,
   fetchMintDecimals,
@@ -19,14 +18,21 @@ import {
 } from "@/lib/gas";
 import { listGasNotes, updateGasNoteRemaining } from "@/lib/gas-credits";
 import { recordActivity } from "@/lib/activity";
-import Link from "next/link";
+import { fetchWalletTokens, type WalletToken } from "@/lib/token-balances";
+import { shortAddr } from "@/lib/ghost";
+
+const CUSTOM = "__custom__";
 
 export default function SendPage() {
   const { publicKey, signTransaction, connected } = useGhostWallet();
-  const [mint, setMint] = useState(USDC_MINT_STR || DEVNET.mint);
+  const [tokens, setTokens] = useState<WalletToken[]>([]);
+  const [loadingTokens, setLoadingTokens] = useState(false);
+  const [selected, setSelected] = useState<string>("");
+  const [customMint, setCustomMint] = useState("");
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [gasNote, setGasNote] = useState("");
+  const [showGas, setShowGas] = useState(false);
   const [busy, setBusy] = useState(false);
   const [gas, setGas] = useState<GasConfig | null>(null);
   const [result, setResult] = useState<{
@@ -35,21 +41,67 @@ export default function SendPage() {
     creditRemaining: string;
   } | null>(null);
 
+  const activeToken = useMemo(() => {
+    if (selected === CUSTOM) return null;
+    return tokens.find((t) => t.mint === selected) ?? null;
+  }, [selected, tokens]);
+
+  const mint = selected === CUSTOM ? customMint.trim() : selected;
+
   useEffect(() => {
     fetchGasConfig()
       .then(setGas)
       .catch(() => setGas(null));
     const stored = listGasNotes()[0];
     if (stored?.note) setGasNote(stored.note);
+    else setShowGas(true);
   }, []);
+
+  useEffect(() => {
+    if (!publicKey) {
+      setTokens([]);
+      setSelected("");
+      return;
+    }
+    let cancelled = false;
+    setLoadingTokens(true);
+    fetchWalletTokens(publicKey)
+      .then((list) => {
+        if (cancelled) return;
+        setTokens(list);
+        setSelected((prev) => {
+          if (prev && (prev === CUSTOM || list.some((t) => t.mint === prev))) {
+            return prev;
+          }
+          return list[0]?.mint ?? CUSTOM;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTokens([]);
+          setSelected(CUSTOM);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingTokens(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [publicKey]);
+
+  function setMax() {
+    if (activeToken) setAmount(activeToken.uiAmount);
+  }
 
   async function onSend() {
     if (!connected || !publicKey || !signTransaction) {
-      toast.error("Connect the empty / low-SOL wallet (X2) first.");
+      toast.error("Connect a wallet first.");
       return;
     }
     if (!gasNote.trim()) {
-      toast.error("Paste a gas note from an X1 top-up.");
+      setShowGas(true);
+      toast.error("Add a gas credit note (from Credits) so Ghost can pay the network fee.");
       return;
     }
     const recipient = to.trim();
@@ -57,25 +109,48 @@ export default function SendPage() {
       toast.error("Enter a recipient address.");
       return;
     }
-    if (!mint.trim()) {
-      toast.error("Enter a token mint.");
+    try {
+      new PublicKey(recipient);
+    } catch {
+      toast.error("Recipient address looks invalid.");
       return;
     }
+    if (!mint) {
+      toast.error("Choose a token.");
+      return;
+    }
+    try {
+      new PublicKey(mint);
+    } catch {
+      toast.error("Token mint looks invalid.");
+      return;
+    }
+
+    if (gas?.allowedMints && gas.allowedMints.length > 0) {
+      if (!gas.allowedMints.includes(mint)) {
+        toast.error("This token isn’t allowlisted on the relayer.");
+        return;
+      }
+    }
+
     setBusy(true);
     setResult(null);
     try {
-      if (gas && !gas.enabled) {
-        throw new Error("Ghost Gas is disabled on the relayer.");
-      }
-      const decimals = await fetchMintDecimals(mint.trim());
-      const amountRaw = toRawAmount(amount, decimals);
-      if (amountRaw === "0") throw new Error("Amount must be greater than zero");
+      if (gas && !gas.enabled) throw new Error("Ghost Gas is paused right now.");
 
-      toast.message("Sponsoring transfer (debiting gas note)…");
+      const dec =
+        activeToken?.decimals ?? (await fetchMintDecimals(mint));
+      const amountRaw = toRawAmount(amount, dec);
+      if (amountRaw === "0") throw new Error("Enter an amount greater than zero");
+
+      if (activeToken && BigInt(amountRaw) > BigInt(activeToken.amountRaw)) {
+        throw new Error("Amount exceeds your balance");
+      }
+
       const out = await sponsoredTransfer({
         from: publicKey.toBase58(),
         to: recipient,
-        mint: mint.trim(),
+        mint,
         amountRaw,
         gasNote: gasNote.trim(),
         signTransaction,
@@ -86,14 +161,18 @@ export default function SendPage() {
         signature: out.signature,
         explorer: out.explorer,
         at: new Date().toISOString(),
-        detail: `gas send → ${recipient.slice(0, 8)}…`,
+        detail: `send ${amount} → ${shortAddr(recipient, 4)}`,
       });
 
       if (out.creditRemaining) {
         updateGasNoteRemaining(gasNote.trim(), out.creditRemaining);
       }
       setResult(out);
-      toast.success("Sent. Ghost paid SOL; gas note was debited.");
+      setAmount("");
+      toast.success("Sent");
+      if (publicKey) {
+        fetchWalletTokens(publicKey).then(setTokens).catch(() => undefined);
+      }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -102,95 +181,150 @@ export default function SendPage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-10">
-      <PageHeader
-        tag="Ghost Gas"
-        title="Send without SOL."
-        description="Connect X2 (token wallet). Paste the gas note from X1’s top-up. You sign the transfer — Ghost pays SOL and charges the note."
-      />
+    <div className="mx-auto max-w-md space-y-8">
+      <header>
+        <h1 className="t-48">Send</h1>
+        <p className="t-14 mt-3 font-normal text-ink/55">
+          Network fees are covered by your{" "}
+          <Link href="/app/credits" className="underline underline-offset-2">
+            gas credit
+          </Link>
+          . You only sign.
+        </p>
+      </header>
 
-      <p className="t-14 font-normal text-ink/55">
-        Need credits?{" "}
-        <Link href="/app/credits" className="underline">
-          Top up with X1
-        </Link>
-        {gas?.creditFeeRaw != null && (
-          <>
-            {" "}
-            · ~{(Number(gas.creditFeeRaw) / 1_000_000).toFixed(4)} USDC per send
-          </>
-        )}
-      </p>
-
-      <section className="border border-ink/15 bg-paper p-6 md:p-8">
+      <section className="border border-ink/15 bg-paper p-5 sm:p-6">
         <div className="space-y-5">
           <div>
-            <Label htmlFor="gas-note">Gas note (from X1)</Label>
-            <Textarea
-              id="gas-note"
-              className="mt-2 rounded-none border-ink/15 bg-cream font-mono text-xs"
-              placeholder="ghost-gas:v1:…"
-              value={gasNote}
-              onChange={(e) => setGasNote(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="mint">Token mint</Label>
+            <Label htmlFor="to">To</Label>
             <Input
-              id="mint"
-              className="mt-2 rounded-none border-ink/15 bg-cream font-mono text-xs"
-              value={mint}
-              onChange={(e) => setMint(e.target.value)}
+              id="to"
+              className="mt-2 h-12 rounded-none border-ink/15 bg-cream font-mono text-sm"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="Solana address"
+              autoComplete="off"
+              data-testid="send-to"
             />
           </div>
+
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="token">Token</Label>
+              {loadingTokens && (
+                <span className="text-[12px] text-ink/45">Loading balances…</span>
+              )}
+            </div>
+            <select
+              id="token"
+              className="mt-2 h-12 w-full border border-ink/15 bg-cream px-3 text-[15px] text-ink outline-none"
+              value={selected || CUSTOM}
+              onChange={(e) => setSelected(e.target.value)}
+              data-testid="send-token"
+            >
+              {tokens.map((t) => (
+                <option key={t.mint} value={t.mint}>
+                  {t.label} · {t.uiAmount}
+                </option>
+              ))}
+              <option value={CUSTOM}>Other token (paste mint)…</option>
+            </select>
+            {selected === CUSTOM && (
+              <Input
+                className="mt-2 h-11 rounded-none border-ink/15 bg-cream font-mono text-xs"
+                value={customMint}
+                onChange={(e) => setCustomMint(e.target.value)}
+                placeholder="Token mint address"
+                data-testid="send-custom-mint"
+              />
+            )}
+            {activeToken && (
+              <p className="mt-2 text-[12px] text-ink/50">
+                Balance {activeToken.uiAmount}
+                <button
+                  type="button"
+                  className="ml-3 underline underline-offset-2"
+                  onClick={setMax}
+                >
+                  Max
+                </button>
+              </p>
+            )}
+          </div>
+
           <div>
             <Label htmlFor="amount">Amount</Label>
             <Input
               id="amount"
-              className="mt-2 rounded-none border-ink/15 bg-cream"
+              className="mt-2 h-12 rounded-none border-ink/15 bg-cream text-[18px]"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="1.0"
+              placeholder="0"
               inputMode="decimal"
+              data-testid="send-amount"
             />
           </div>
-          <div>
-            <Label htmlFor="to">Recipient</Label>
-            <Input
-              id="to"
-              className="mt-2 rounded-none border-ink/15 bg-cream font-mono text-xs"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              placeholder="Destination Solana address"
-              autoComplete="off"
-            />
-          </div>
+
           <Button
             size="pill"
-            className="w-full"
+            className="h-12 w-full text-[17px]"
             disabled={busy || !connected}
             onClick={onSend}
             data-testid="gas-send-submit"
           >
-            {busy ? "Sponsoring…" : "Sign & send (debit note + Ghost pays gas)"}
+            {busy ? "Sending…" : "Send"}
           </Button>
         </div>
       </section>
 
-      {result && (
-        <section className="border border-ink/15 bg-sun/35 p-6 md:p-8" data-testid="gas-send-result">
-          <span className="tag">Transfer submitted</span>
-          <p className="mt-4 break-all font-mono text-xs">
-            Tx:{" "}
-            <a className="underline" href={result.explorer} target="_blank" rel="noreferrer">
-              {result.signature}
-            </a>
-          </p>
-          {result.creditRemaining && (
-            <p className="mt-3 t-14 font-normal text-ink/65">
-              Credit remaining: {result.creditRemaining} base units
+      <div className="border border-ink/10 bg-sand/60 px-4 py-3">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between text-left text-[13px] text-ink/70"
+          onClick={() => setShowGas((v) => !v)}
+        >
+          <span>
+            {gasNote.trim()
+              ? "Gas credit attached"
+              : "Gas credit required"}
+          </span>
+          <span className="text-ink/45">{showGas ? "Hide" : "Show"}</span>
+        </button>
+        {showGas && (
+          <div className="mt-3 space-y-2">
+            <Textarea
+              className="rounded-none border-ink/15 bg-paper font-mono text-[11px]"
+              placeholder="ghost-gas:v1:… (from Credits)"
+              value={gasNote}
+              onChange={(e) => setGasNote(e.target.value)}
+              rows={3}
+            />
+            <p className="text-[12px] text-ink/50">
+              Top up on{" "}
+              <Link href="/app/credits" className="underline">
+                Credits
+              </Link>{" "}
+              with your main wallet, then paste the note here (or keep it saved in this
+              browser).
             </p>
-          )}
+          </div>
+        )}
+      </div>
+
+      {result && (
+        <section
+          className="border border-ink/15 bg-sun/35 p-5"
+          data-testid="gas-send-result"
+        >
+          <p className="text-[15px]">Sent</p>
+          <a
+            className="mt-3 block break-all font-mono text-xs underline"
+            href={result.explorer}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {result.signature}
+          </a>
         </section>
       )}
     </div>

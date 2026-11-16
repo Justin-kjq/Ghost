@@ -1,4 +1,6 @@
 import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   getAssociatedTokenAddressSync,
   getMint,
@@ -80,11 +82,22 @@ export async function topUpGasCredits(params: {
 
   const fromAta = getAssociatedTokenAddressSync(mint, params.publicKey);
   const ixs = [];
+
+  // Anyone can create the relayer's USDC ATA (X1 pays rent once). Owner = fee payer.
   const treasuryInfo = await connection.getAccountInfo(treasury);
   if (!treasuryInfo) {
-    // treasury should already exist (relayer ATA). Creating would need relayer as owner — fail clear.
-    throw new Error(
-      "Gas treasury ATA missing on-chain. Fund/create the relayer USDC ATA first.",
+    if (!gas.feePayer) {
+      throw new Error("Relayer fee payer missing from gas config");
+    }
+    ixs.push(
+      createAssociatedTokenAccountIdempotentInstruction(
+        params.publicKey,
+        treasury,
+        new PublicKey(gas.feePayer),
+        mint,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+      ),
     );
   }
 
