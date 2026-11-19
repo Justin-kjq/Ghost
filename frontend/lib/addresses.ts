@@ -6,7 +6,7 @@ import {
   isMainnetCluster,
 } from "./config";
 
-export const GITHUB_REPO = "https://github.com/Arnab-Afk/Ghost";
+export const GITHUB_REPO = "https://github.com/arnabbhowmik07/Ghost";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://ghost.arnabbhowmik.in";
 

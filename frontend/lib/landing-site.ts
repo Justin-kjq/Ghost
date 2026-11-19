@@ -1,7 +1,7 @@
 /** Links and on-chain proof data for the marketing landing. */
 
 export const APP_URL = "/login";
-export const REPO_URL = "https://github.com/Arnab-Afk/Ghost";
+export const REPO_URL = "https://github.com/arnabbhowmik07/Ghost";
 
 export const SCAN = "https://explorer.solana.com";
 export const CLUSTER = "devnet";
