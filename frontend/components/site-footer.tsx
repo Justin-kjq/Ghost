@@ -6,6 +6,11 @@ import {
   SOCIAL_LINKS,
 } from "@/src/config/site";
 
+
+function flag(link: object, key: "external" | "todo"): boolean {
+  return key in link && Boolean((link as Record<string, unknown>)[key]);
+}
+
 function FooterAnchor({
   href,
   children,
@@ -60,8 +65,8 @@ export function SiteFooter() {
                 <FooterAnchor
                   key={s.label}
                   href={s.href}
-                  external={"external" in s ? s.external : false}
-                  todo={"todo" in s ? s.todo : false}
+                  external={flag(s, "external")}
+                  todo={flag(s, "todo")}
                 >
                   <span className="inline-flex h-9 min-w-9 items-center justify-center border border-cream/15 px-3 text-[13px] tracking-[-0.01em]">
                     {s.label}
@@ -80,8 +85,8 @@ export function SiteFooter() {
                     <li key={link.label} className="t-14 font-normal">
                       <FooterAnchor
                         href={link.href}
-                        external={"external" in link ? link.external : false}
-                        todo={"todo" in link ? link.todo : false}
+                        external={flag(link, "external")}
+                        todo={flag(link, "todo")}
                       >
                         {link.label}
                       </FooterAnchor>
