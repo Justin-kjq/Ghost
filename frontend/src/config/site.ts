@@ -34,17 +34,15 @@ export const LINKS = {
   stake: "/stake",
   home: "/",
   docs: "/docs",
-  /** TODO: publish litepaper */
-  litepaper: "#",
-  /** TODO: host demo on site docs index; YouTube is live */
-  demoVideo: "https://youtu.be/2z89OodyuL4",
+  litepaper: "/litepaper.pdf",
+  demoVideo: "https://youtu.be/QTJv78KeQqM",
   /** TODO: add pitch deck URL */
   pitchDeck: "#",
-  /** TODO: point at public org repo when ready */
-  github: "#",
+  github: "https://github.com/arnabbhowmik07/Ghost",
   /** TODO: publish brand kit */
   brandKit: "#",
   x: "https://x.com/ghostlabshq",
+  linkedin: "https://www.linkedin.com/company/ghostlabshq",
   /** TODO: add Telegram invite */
   telegram: "#",
   /** TODO: add Discord invite */
@@ -64,24 +62,21 @@ export const FOOTER_COLUMNS = [
       { label: "App", href: LINKS.app },
       { label: "Stake", href: LINKS.stake },
       { label: "Docs", href: LINKS.docs },
-      { label: "Litepaper", href: LINKS.litepaper, todo: true },
+      { label: "Litepaper", href: LINKS.litepaper },
     ],
   },
   {
     title: "Resources",
     links: [
       { label: "Demo video", href: LINKS.demoVideo, external: true },
-      { label: "Pitch deck", href: LINKS.pitchDeck, todo: true },
-      { label: "GitHub", href: LINKS.github, todo: true },
-      { label: "Brand kit", href: LINKS.brandKit, todo: true },
+      { label: "GitHub", href: LINKS.github, external: true },
     ],
   },
   {
     title: "Community",
     links: [
       { label: "X", href: LINKS.x, external: true },
-      { label: "Telegram", href: LINKS.telegram, todo: true },
-      { label: "Discord", href: LINKS.discord, todo: true },
+      { label: "LinkedIn", href: LINKS.linkedin, external: true },
       { label: "Ambassador program", href: LINKS.ambassador, external: true },
     ],
   },
@@ -98,7 +93,6 @@ export const FOOTER_COLUMNS = [
 
 export const SOCIAL_LINKS = [
   { label: "X", href: LINKS.x, external: true as const },
-  { label: "Telegram", href: LINKS.telegram, todo: true as const },
-  { label: "Discord", href: LINKS.discord, todo: true as const },
-  { label: "GitHub", href: LINKS.github, todo: true as const },
+  { label: "LinkedIn", href: LINKS.linkedin, external: true as const },
+  { label: "GitHub", href: LINKS.github, external: true as const },
 ] as const;

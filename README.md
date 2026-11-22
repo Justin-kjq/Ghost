@@ -7,6 +7,7 @@
 | **Live UI** | [ghost.arnabbhowmik.in](https://ghost.arnabbhowmik.in) |
 | **API** | [ghost-api.arnabbhowmik.in](https://ghost-api.arnabbhowmik.in) |
 | **Docs** | [ghost.arnabbhowmik.in/docs](https://ghost.arnabbhowmik.in/docs) |
+| **Demo** | [youtu.be/QTJv78KeQqM](https://youtu.be/QTJv78KeQqM) |
 | **Repo** | [github.com/arnabbhowmik07/Ghost](https://github.com/arnabbhowmik07/Ghost) |
 | **License** | MIT |
 
