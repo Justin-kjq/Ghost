@@ -12,7 +12,7 @@ export const LINKS = {
   stake: "/stake",
   docs: "/docs",
   litepaper: "/litepaper.pdf",
-  pitchDeck: "/pitch-deck/",
+  pitchDeck: "/pitch-deck/index.html",
   demoVideo: "https://youtu.be/QTJv78KeQqM",
   github: "https://github.com/arnabbhowmik07/Ghost",
   x: "https://x.com/ghostlabshq",

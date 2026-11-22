@@ -7,7 +7,7 @@
 | **Site** | [ghostlabshq.xyz](https://ghostlabshq.xyz) |
 | **Docs** | [ghostlabshq.xyz/docs](https://ghostlabshq.xyz/docs) |
 | **Litepaper** | [ghostlabshq.xyz/litepaper.pdf](https://ghostlabshq.xyz/litepaper.pdf) |
-| **Pitch deck** | [ghostlabshq.xyz/pitch-deck](https://ghostlabshq.xyz/pitch-deck/) |
+| **Pitch deck** | [ghostlabshq.xyz/pitch-deck](https://ghostlabshq.xyz/pitch-deck/index.html) |
 | **Demo video** | [youtu.be/QTJv78KeQqM](https://youtu.be/QTJv78KeQqM) |
 | **X** | [x.com/ghostlabshq](https://x.com/ghostlabshq) |
 | **Telegram** | [t.me/ghostlabshqtg](https://t.me/ghostlabshqtg) |

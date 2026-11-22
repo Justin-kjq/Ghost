@@ -8,6 +8,20 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.join(frontendDir, ".."),
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/pitch-deck",
+        destination: "/pitch-deck/index.html",
+        permanent: false,
+      },
+      {
+        source: "/pitch-deck/",
+        destination: "/pitch-deck/index.html",
+        permanent: false,
+      },
+    ];
+  },
   transpilePackages: [
     "@ghost/sdk",
     "@reown/appkit",
