@@ -1,0 +1,27 @@
+sequenceDiagram
+  autonumber
+  actor X1 as Funding wallet (X1)
+  participant B as Browser
+  participant R as Relayer
+  participant L as Credit ledger
+  participant S as Solana
+  actor X2 as Spending wallet (X2, 0 SOL)
+  B-->>B: secret ← random<br/>commitment = SHA-256(secret)
+  B->>R: POST /v1/gas/credits/quote {mint, amount}
+  R-->>B: credit = amount·(1−haircut)·(1−protocol fee)
+  X1->>S: transfer USDC (or allowlisted token) to Ghost treasury ATA + Memo(commitment)
+  B->>R: POST /v1/gas/credits/deposit {commitment, amount, txSignature}
+  R->>S: getParsedTransaction (≤15 min old, memo, exact ATA delta)
+  R->>L: reserve txSignature, store credit (initial, protocolFeeRaw)
+  R-->>B: Gas note ghost-gas:v1:secret:commitment:credit
+  Note over B,X2: later, from X2
+  X2->>R: POST /v1/gas/prepare {from, to, mint, amount, gasNote}
+  R-->>X2: unsigned tx, feePayer = relayer
+  X2->>R: POST /v1/gas/submit {signed tx, gasNote}
+  R-->>R: assert tx shape (only CU budget, ATA create, transferChecked)
+  R->>L: debit 0.01 USDC (GAS_CREDIT_FEE_RAW)
+  R->>S: co-sign as fee payer, send
+  alt send fails
+    R->>L: refund debit
+  end
+  R-->>X2: signature, creditRemaining

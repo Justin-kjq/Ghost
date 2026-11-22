@@ -1,0 +1,16 @@
+flowchart LR
+  subgraph repo["arnabbhowmik07/Ghost"]
+    C["circuits/<br/>merkle_proof.circom"] -- "build: wasm, zkey,<br/>verification_key.json" --> SDK
+    C -- "verification_key.json" --> REL
+    PRG["programs/ghost_pool<br/>(Anchor 0.30.1)"] -- "IDL" --> REL & FE
+    SDK["sdk/<br/>notes, poseidon, merkle,<br/>proof, recipient, pda, fees"] --> FE & REL & SCR
+    REL["relayer/<br/>Fastify API, gas credits,<br/>sync, zk verify"]
+    FE["frontend/<br/>Next.js 15, Tailwind 4,<br/>Reown AppKit"]
+    SCR["scripts/<br/>mint, init pool, set relayer,<br/>set fee, e2e"]
+    TST["tests/<br/>Anchor localnet"] --> PRG
+  end
+  FE -- "HTTPS JSON" --> REL
+  FE -- "RPC (wallet-signed deposits)" --> SOL[("Solana RPC")]
+  REL -- "RPC (reads PDAs, sends txs)" --> SOL
+  REL -- "price quotes" --> JUP["Jupiter lite-api"]
+  REL -- "gas-credits.json" --> DISK[("DATA_DIR volume")]

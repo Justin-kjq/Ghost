@@ -1,0 +1,25 @@
+sequenceDiagram
+  autonumber
+  actor A as Depositor wallet
+  participant B as Browser (SDK)
+  participant P as ghost_pool program
+  participant R as Relayer
+  actor C as Recipient (fresh address)
+  Note over B: secret, nullifier ← 31 random bytes each<br/>C = Poseidon(secret, nullifier)
+  B->>A: build deposit(C)
+  A->>P: deposit(commitment) — 1 USDC to vault
+  P-->>P: init CommitmentRecord(C), LeafRecord(index i)<br/>next_index += 1
+  B-->>A: Ghost Note ghost:v1:…:i:C (user must save it)
+  Note over A,C: time passes, other deposits grow the anonymity set
+  C->>B: paste note, choose recipient
+  B->>R: GET /v1/merkle-path/i
+  R-->>R: rebuild tree from LeafRecord PDAs
+  R-->>B: pathElements, pathIndices, root
+  B-->>B: Groth16 prove: leaf ∈ tree(root),<br/>nullifierHash = Poseidon(nullifier), bind recipient
+  B->>R: POST /v1/withdraw {proof, root, nullifierHash, recipient}
+  R-->>R: verify proof, root ∈ history,<br/>recipient field matches
+  R->>P: withdraw(nullifierHash, root) signed by pool.relayer
+  P-->>P: init NullifierRecord (double-spend guard)
+  P->>C: payout = D − fee
+  P->>P: fee = floor(D·fee_bps/10000) → treasury ATA
+  R-->>C: tx signature

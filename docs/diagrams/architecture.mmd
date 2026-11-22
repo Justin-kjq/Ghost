@@ -1,0 +1,35 @@
+flowchart LR
+  subgraph Client["User device (browser)"]
+    UI["Next.js 15 dApp<br/>ghostlabshq.xyz"]
+    W["Wallet via Reown AppKit<br/>(Phantom, Solflare, WalletConnect)"]
+    SDK["@ghost/sdk<br/>notes, Poseidon, Merkle,<br/>snarkjs Groth16 prover"]
+    UI --- SDK
+    UI --- W
+  end
+  subgraph Relayer["Ghost relayer (Fastify, Docker)"]
+    API["HTTP API<br/>/v1/gas/* /v1/withdraw /v1/merkle-path"]
+    ZK["Groth16 verify<br/>verification_key.json"]
+    TREE["Poseidon Merkle tree<br/>depth 10, root history"]
+    LEDGER[("Gas credit ledger<br/>DATA_DIR/gas-credits.json")]
+    KEY["Relayer fee-payer key<br/>(host secret)"]
+    API --> ZK
+    API --> TREE
+    API --> LEDGER
+    API --> KEY
+  end
+  subgraph Solana["Solana (mainnet pilot + devnet)"]
+    PROG["ghost_pool program<br/>69gep…TczR"]
+    POOL[("PoolConfig PDA")]
+    VAULT[("Vault USDC ATA")]
+    TRE[("Treasury USDC ATA")]
+    PDAS[("Commitment / Leaf /<br/>Nullifier PDAs")]
+    SPL["SPL Token / ATA programs"]
+    PROG --> POOL & VAULT & TRE & PDAS
+  end
+  JUP["Jupiter lite-api<br/>(price quotes only)"]
+  W -- "deposit tx (signs)" --> PROG
+  SDK -- "proof + public signals" --> API
+  KEY -- "withdraw / fee-payer sigs" --> PROG
+  KEY -- "sponsored transfers" --> SPL
+  TREE -- "reads LeafRecord PDAs" --> PDAS
+  API -- "non-USDC top-up pricing" --> JUP

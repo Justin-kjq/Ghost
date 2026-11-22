@@ -1,0 +1,16 @@
+flowchart TB
+  subgraph Shield["Ghost Shield (on-chain, ghost_pool)"]
+    D["Deposit D = 1 USDC<br/>to vault"] --> W{"withdraw<br/>(relayer-gated)"}
+    W -- "D − fee" --> REC["Recipient ATA"]
+    W -- "fee = floor(D·fee_bps/10000)<br/>fee_bps = 100 → 0.01 USDC" --> T1[("pool.treasury ATA")]
+    AUTH["pool.authority"] -. "set_fee_bps (≤1000)" .-> W
+  end
+  subgraph Gas["Ghost Gas (off-chain ledger, relayer)"]
+    G["Top-up G to Gas treasury ATA"] --> Q{"quote"}
+    Q -- "haircut (non-USDC, 200 bps)" --> H["G' = USDC value·(1−h)"]
+    H -- "protocol fee floor(G'·100/10000)" --> T2[("Gas treasury ATA<br/>GAS_TREASURY or relayer USDC ATA")]
+    H -- "credit = G' − fee" --> C["Gas note balance"]
+    C -- "0.01 USDC per sponsored tx" --> T2
+    T2 -. "pays SOL tx fees + ATA rent<br/>from relayer SOL balance" .-> COST["Operating cost"]
+  end
+  T1 & T2 --> MS["Recommended: Squads multisig treasury (TODO)"]

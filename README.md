@@ -113,6 +113,78 @@ Secondary product: **Ghost Shield** — deposit fixed 1 USDC, keep a Ghost Note,
 
 ## 5. How it works
 
+![Shield: private deposit and withdraw](docs/diagrams/ghost_shield-sequence.png)
+
+<details>
+<summary>Mermaid source</summary>
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor A as Depositor wallet
+  participant B as Browser (SDK)
+  participant P as ghost_pool program
+  participant R as Relayer
+  actor C as Recipient (fresh address)
+  Note over B: secret, nullifier ← 31 random bytes each<br/>C = Poseidon(secret, nullifier)
+  B->>A: build deposit(C)
+  A->>P: deposit(commitment) — 1 USDC to vault
+  P-->>P: init CommitmentRecord(C), LeafRecord(index i)<br/>next_index += 1
+  B-->>A: Ghost Note ghost:v1:…:i:C (user must save it)
+  Note over A,C: time passes, other deposits grow the anonymity set
+  C->>B: paste note, choose recipient
+  B->>R: GET /v1/merkle-path/i
+  R-->>R: rebuild tree from LeafRecord PDAs
+  R-->>B: pathElements, pathIndices, root
+  B-->>B: Groth16 prove: leaf ∈ tree(root),<br/>nullifierHash = Poseidon(nullifier), bind recipient
+  B->>R: POST /v1/withdraw {proof, root, nullifierHash, recipient}
+  R-->>R: verify proof, root ∈ history,<br/>recipient field matches
+  R->>P: withdraw(nullifierHash, root) signed by pool.relayer
+  P-->>P: init NullifierRecord (double-spend guard)
+  P->>C: payout = D − fee
+  P->>P: fee = floor(D·fee_bps/10000) → treasury ATA
+  R-->>C: tx signature
+```
+
+</details>
+
+![Gas: top up, then gasless transfer](docs/diagrams/ghost_gas-credit-flow.png)
+
+<details>
+<summary>Mermaid source</summary>
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor X1 as Funding wallet (X1)
+  participant B as Browser
+  participant R as Relayer
+  participant L as Credit ledger
+  participant S as Solana
+  actor X2 as Spending wallet (X2, 0 SOL)
+  B-->>B: secret ← random<br/>commitment = SHA-256(secret)
+  B->>R: POST /v1/gas/credits/quote {mint, amount}
+  R-->>B: credit = amount·(1−haircut)·(1−protocol fee)
+  X1->>S: transfer USDC (or allowlisted token) to Ghost treasury ATA + Memo(commitment)
+  B->>R: POST /v1/gas/credits/deposit {commitment, amount, txSignature}
+  R->>S: getParsedTransaction (≤15 min old, memo, exact ATA delta)
+  R->>L: reserve txSignature, store credit (initial, protocolFeeRaw)
+  R-->>B: Gas note ghost-gas:v1:secret:commitment:credit
+  Note over B,X2: later, from X2
+  X2->>R: POST /v1/gas/prepare {from, to, mint, amount, gasNote}
+  R-->>X2: unsigned tx, feePayer = relayer
+  X2->>R: POST /v1/gas/submit {signed tx, gasNote}
+  R-->>R: assert tx shape (only CU budget, ATA create, transferChecked)
+  R->>L: debit 0.01 USDC (GAS_CREDIT_FEE_RAW)
+  R->>S: co-sign as fee payer, send
+  alt send fails
+    R->>L: refund debit
+  end
+  R-->>X2: signature, creditRemaining
+```
+
+</details>
+
 ```
 Primary ── USDC / allowed asset ──► Ghost treasury
                 │
@@ -209,6 +281,32 @@ See `deployments.json` for explorer links to deploy / deposit / withdraw txs.
 
 Treasury USDC lands in the relayer-associated USDC ATA (or `GAS_TREASURY` override).
 
+![Fees and treasury](docs/diagrams/ghost_fee-treasury.png)
+
+<details>
+<summary>Mermaid source</summary>
+
+```mermaid
+flowchart TB
+  subgraph Shield["Ghost Shield (on-chain, ghost_pool)"]
+    D["Deposit D = 1 USDC<br/>to vault"] --> W{"withdraw<br/>(relayer-gated)"}
+    W -- "D − fee" --> REC["Recipient ATA"]
+    W -- "fee = floor(D·fee_bps/10000)<br/>fee_bps = 100 → 0.01 USDC" --> T1[("pool.treasury ATA")]
+    AUTH["pool.authority"] -. "set_fee_bps (≤1000)" .-> W
+  end
+  subgraph Gas["Ghost Gas (off-chain ledger, relayer)"]
+    G["Top-up G to Gas treasury ATA"] --> Q{"quote"}
+    Q -- "haircut (non-USDC, 200 bps)" --> H["G' = USDC value·(1−h)"]
+    H -- "protocol fee floor(G'·100/10000)" --> T2[("Gas treasury ATA<br/>GAS_TREASURY or relayer USDC ATA")]
+    H -- "credit = G' − fee" --> C["Gas note balance"]
+    C -- "0.01 USDC per sponsored tx" --> T2
+    T2 -. "pays SOL tx fees + ATA rent<br/>from relayer SOL balance" .-> COST["Operating cost"]
+  end
+  T1 & T2 --> MS["Recommended: Squads multisig treasury (TODO)"]
+```
+
+</details>
+
 ---
 
 ## 9. Sponsor & partner integrations
@@ -241,6 +339,77 @@ Open to wallet embeds, bot / Telegram send flows, and treasury “credit packs�
 ---
 
 ## 11. Architecture
+
+![Ghost architecture](docs/diagrams/ghost_architecture.png)
+
+<details>
+<summary>Mermaid source</summary>
+
+```mermaid
+flowchart LR
+  subgraph Client["User device (browser)"]
+    UI["Next.js 15 dApp<br/>ghostlabshq.xyz"]
+    W["Wallet via Reown AppKit<br/>(Phantom, Solflare, WalletConnect)"]
+    SDK["@ghost/sdk<br/>notes, Poseidon, Merkle,<br/>snarkjs Groth16 prover"]
+    UI --- SDK
+    UI --- W
+  end
+  subgraph Relayer["Ghost relayer (Fastify, Docker)"]
+    API["HTTP API<br/>/v1/gas/* /v1/withdraw /v1/merkle-path"]
+    ZK["Groth16 verify<br/>verification_key.json"]
+    TREE["Poseidon Merkle tree<br/>depth 10, root history"]
+    LEDGER[("Gas credit ledger<br/>DATA_DIR/gas-credits.json")]
+    KEY["Relayer fee-payer key<br/>(host secret)"]
+    API --> ZK
+    API --> TREE
+    API --> LEDGER
+    API --> KEY
+  end
+  subgraph Solana["Solana (mainnet pilot + devnet)"]
+    PROG["ghost_pool program<br/>69gep…TczR"]
+    POOL[("PoolConfig PDA")]
+    VAULT[("Vault USDC ATA")]
+    TRE[("Treasury USDC ATA")]
+    PDAS[("Commitment / Leaf /<br/>Nullifier PDAs")]
+    SPL["SPL Token / ATA programs"]
+    PROG --> POOL & VAULT & TRE & PDAS
+  end
+  JUP["Jupiter lite-api<br/>(price quotes only)"]
+  W -- "deposit tx (signs)" --> PROG
+  SDK -- "proof + public signals" --> API
+  KEY -- "withdraw / fee-payer sigs" --> PROG
+  KEY -- "sponsored transfers" --> SPL
+  TREE -- "reads LeafRecord PDAs" --> PDAS
+  API -- "non-USDC top-up pricing" --> JUP
+```
+
+</details>
+
+![Components and data flow](docs/diagrams/ghost_components.png)
+
+<details>
+<summary>Mermaid source</summary>
+
+```mermaid
+flowchart LR
+  subgraph repo["arnabbhowmik07/Ghost"]
+    C["circuits/<br/>merkle_proof.circom"] -- "build: wasm, zkey,<br/>verification_key.json" --> SDK
+    C -- "verification_key.json" --> REL
+    PRG["programs/ghost_pool<br/>(Anchor 0.30.1)"] -- "IDL" --> REL & FE
+    SDK["sdk/<br/>notes, poseidon, merkle,<br/>proof, recipient, pda, fees"] --> FE & REL & SCR
+    REL["relayer/<br/>Fastify API, gas credits,<br/>sync, zk verify"]
+    FE["frontend/<br/>Next.js 15, Tailwind 4,<br/>Reown AppKit"]
+    SCR["scripts/<br/>mint, init pool, set relayer,<br/>set fee, e2e"]
+    TST["tests/<br/>Anchor localnet"] --> PRG
+  end
+  FE -- "HTTPS JSON" --> REL
+  FE -- "RPC (wallet-signed deposits)" --> SOL[("Solana RPC")]
+  REL -- "RPC (reads PDAs, sends txs)" --> SOL
+  REL -- "price quotes" --> JUP["Jupiter lite-api"]
+  REL -- "gas-credits.json" --> DISK[("DATA_DIR volume")]
+```
+
+</details>
 
 ```
 ┌─────────────┐     USDC / SPL      ┌──────────────────┐
