@@ -161,10 +161,6 @@ const faqs = [
     a: "No. Shield is the optional private pool (fixed 1 USDC deposits and ZK withdraws). Gas is the everyday product for sponsoring sends.",
   },
   {
-    q: "Has Ghost been audited?",
-    a: "Not yet. Ghost is an unaudited Lean MVP. Use it accordingly until an audit is complete.",
-  },
-  {
     q: "Which networks are supported?",
     a: "Solana.",
   },
