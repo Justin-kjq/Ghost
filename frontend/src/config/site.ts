@@ -43,8 +43,7 @@ export const LINKS = {
   brandKit: "#",
   x: "https://x.com/ghostlabshq",
   linkedin: "https://www.linkedin.com/company/ghostlabshq",
-  /** TODO: add Telegram invite */
-  telegram: "#",
+  telegram: "https://t.me/ghostlabshqtg",
   /** TODO: add Discord invite */
   discord: "#",
   ambassador:
@@ -77,6 +76,7 @@ export const FOOTER_COLUMNS = [
     links: [
       { label: "X", href: LINKS.x, external: true },
       { label: "LinkedIn", href: LINKS.linkedin, external: true },
+      { label: "Telegram", href: LINKS.telegram, external: true },
       { label: "Ambassador program", href: LINKS.ambassador, external: true },
     ],
   },
@@ -94,5 +94,6 @@ export const FOOTER_COLUMNS = [
 export const SOCIAL_LINKS = [
   { label: "X", href: LINKS.x, external: true as const },
   { label: "LinkedIn", href: LINKS.linkedin, external: true as const },
+  { label: "Telegram", href: LINKS.telegram, external: true as const },
   { label: "GitHub", href: LINKS.github, external: true as const },
 ] as const;
