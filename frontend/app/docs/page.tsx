@@ -1,9 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { TurnArrow, Wordmark } from "@/components/landing/marks";
-import { APP_URL, REPO_URL } from "@/lib/landing-site";
-import { LEGAL_PAGES } from "@/lib/legal";
-import { GITHUB_REPO } from "@/lib/addresses";
+import { SiteFooter } from "@/components/site-footer";
+import { LINKS } from "@/src/config/site";
 
 export const metadata: Metadata = {
   title: "Docs",
@@ -37,20 +36,15 @@ export default function DocsPage() {
           <Link href="/" className="text-ink/55 transition-colors hover:text-ink">
             Home
           </Link>
+          <Link href={LINKS.stake} className="text-ink/55 transition-colors hover:text-ink">
+            Stake
+          </Link>
           <Link href="/docs" className="text-ink transition-colors">
             Docs
           </Link>
-          <Link href={APP_URL} className="text-ink/55 transition-colors hover:text-ink">
+          <Link href={LINKS.app} className="text-ink/55 transition-colors hover:text-ink">
             App
           </Link>
-          <a
-            href={REPO_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="text-ink/55 transition-colors hover:text-ink"
-          >
-            GitHub
-          </a>
         </nav>
       </header>
 
@@ -63,7 +57,7 @@ export default function DocsPage() {
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link
-              href={APP_URL}
+              href={LINKS.app}
               className="group inline-flex items-center gap-[10px] bg-ink px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-cream"
             >
               Open app
@@ -193,7 +187,7 @@ export default function DocsPage() {
               </ul>
             </div>
             <Link
-              href={APP_URL}
+              href={LINKS.app}
               className="group inline-flex w-fit items-center gap-[10px] bg-sun px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-ink"
             >
               Try Credits
@@ -203,32 +197,7 @@ export default function DocsPage() {
         </section>
       </main>
 
-      <footer className="gutter border-t border-ink/15 bg-paper py-10">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="t-14 text-ink/55">© {new Date().getFullYear()} Ghost</p>
-            <p className="mt-2 max-w-[48ch] text-sm text-ink/45">
-              Prepaid gas for Solana sends. Primary wallet funds. Alt wallet signs.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-5 t-14">
-            <Link href="/" className="hover:underline">
-              Home
-            </Link>
-            <Link href={APP_URL} className="hover:underline">
-              App
-            </Link>
-            <a href={GITHUB_REPO} target="_blank" rel="noreferrer" className="hover:underline">
-              GitHub
-            </a>
-            {LEGAL_PAGES.map((p) => (
-              <Link key={p.href} href={p.href} className="hover:underline">
-                {p.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

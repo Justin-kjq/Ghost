@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Wordmark } from "@/components/landing/marks";
+import { SiteFooter } from "@/components/site-footer";
 import { LEGAL, LEGAL_PAGES } from "@/lib/legal";
-import { GITHUB_REPO } from "@/lib/addresses";
+import { LINKS } from "@/src/config/site";
 
 export function LegalShell({
   title,
@@ -20,6 +21,12 @@ export function LegalShell({
           <Wordmark className="text-[20px]" />
         </Link>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 t-14">
+          <Link
+            href={LINKS.stake}
+            className="text-ink/55 transition-colors hover:text-ink"
+          >
+            Stake
+          </Link>
           {LEGAL_PAGES.map((p) => (
             <Link
               key={p.href}
@@ -47,34 +54,7 @@ export function LegalShell({
         </article>
       </main>
 
-      <footer className="gutter border-t border-ink/15 bg-paper py-10">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="t-14 text-ink/55">© {new Date().getFullYear()} {LEGAL.operator}</p>
-            <p className="mt-2 max-w-[48ch] text-sm text-ink/45">
-              These pages are product defaults. Have qualified counsel review them before a
-              production launch.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-5 t-14">
-            <Link href="/" className="hover:underline">
-              Home
-            </Link>
-            <Link href="/login" className="hover:underline">
-              App
-            </Link>
-            <a href={GITHUB_REPO} target="_blank" rel="noreferrer" className="hover:underline">
-              GitHub
-            </a>
-            <a
-              href={`mailto:${LEGAL.contactEmail}`}
-              className="hover:underline"
-            >
-              {LEGAL.contactEmail}
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

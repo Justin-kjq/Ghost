@@ -6,17 +6,16 @@ import { ReceiptArt } from "@/components/landing/LineArt";
 import { SchCompliance, SchGasless } from "@/components/landing/Schematics";
 import { PrivacyStat } from "@/components/landing/PrivacyStat";
 import { FigProof, FigTree } from "@/components/landing/Figures";
-import { TurnArrow, Wordmark } from "@/components/landing/marks";
+import { TurnArrow } from "@/components/landing/marks";
 import { BuiltWithLogos } from "@/components/landing/BuiltWithLogos";
 import {
   APP_URL,
-  REPO_URL,
   contracts,
   explorerAddress,
   explorerTx,
   transactions,
 } from "@/lib/landing-site";
-import { LEGAL_PAGES } from "@/lib/legal";
+import { SiteFooter } from "@/components/site-footer";
 
 const pillars = [
   {
@@ -498,87 +497,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="relative overflow-hidden bg-coal text-cream">
-        <div className="gutter grid gap-10 pt-[120px] md:grid-cols-[1fr_auto]">
-          <nav className="t-48 max-w-[620px]">
-            {[
-              ["Home", "#top"],
-              ["How it works", "#how"],
-              ["Security", "#security"],
-              ["Proof", "#proof"],
-            ].map(([t, h], i, a) => (
-              <span key={t}>
-                <a href={h} className="transition-opacity hover:opacity-60">
-                  {t}
-                </a>
-                {i < a.length - 1 && <span> / </span>}
-              </span>
-            ))}
-          </nav>
-          <ul className="t-14 space-y-3 md:min-w-[320px]">
-            {[
-              ["Launch app", APP_URL],
-              ["GitHub", REPO_URL],
-              ["Docs", "/docs"],
-              ...LEGAL_PAGES.map((p) => [p.label, p.href] as const),
-            ].map(([t, h]) => (
-              <li key={t}>
-                <a href={h} className="hover:opacity-60">
-                  {t}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="relative mt-16 grid md:mt-0 md:min-h-[600px] md:grid-cols-[minmax(0,616px)_1fr]">
-          <div className="gutter flex flex-col justify-end pb-10">
-            <div className="flex flex-wrap gap-6 border-b border-cream/15 pb-6">
-              {[
-                ["Anchor", "ghost_pool program"],
-                ["Groth16", "Circom · Poseidon"],
-              ].map(([a, b]) => (
-                <div key={a} className="t-14 border-l border-cream/20 pl-4 first:border-0 first:pl-0">
-                  <p>{a}</p>
-                  <p className="font-normal text-[#7a7772]">{b}</p>
-                </div>
-              ))}
-            </div>
-            <p className="t-14 mt-5 font-normal">© 2026 Ghost Privacy Suite.</p>
-            <p className="t-14 mt-3 flex flex-wrap gap-x-4 gap-y-2 font-normal text-cream/55">
-              {LEGAL_PAGES.map((p) => (
-                <a key={p.href} href={p.href} className="hover:text-cream">
-                  {p.label}
-                </a>
-              ))}
-            </p>
-          </div>
-
-          <div className="relative mt-10 min-h-[520px] md:mt-[40px]">
-            <div className="grid-paper absolute inset-0 border-l border-t border-cream/15 [--gp:rgba(254,251,246,.09)] [--gs:56px]" />
-            <div className="absolute bottom-0 right-0 top-[72px] w-[86%] bg-paper p-6 text-ink md:p-8">
-              <p className="t-14 font-normal text-ink/60">Accounts · Solana</p>
-              <ul className="mt-4 space-y-1">
-                {contracts.slice(0, 3).map((c) => (
-                  <li key={c.address}>
-                    <a
-                      href={explorerAddress(c.address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="t-24 hover:underline"
-                    >
-                      {c.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="absolute bottom-0 right-0 flex h-[46%] w-[58%] flex-col justify-end bg-sun p-6 text-ink md:p-8">
-              <Wordmark className="text-[40px] [--eye:var(--sun)]" />
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

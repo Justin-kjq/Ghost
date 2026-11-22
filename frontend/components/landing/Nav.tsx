@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { APP_URL } from "@/lib/landing-site";
+import { LINKS } from "@/src/config/site";
 import { TurnArrow, Wordmark } from "./marks";
 
 const links = [
-  { href: "#how", label: "How it works" },
-  { href: "#security", label: "Security" },
-  { href: "#proof", label: "Proof" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#security", label: "Security" },
+  { href: "/#proof", label: "Proof" },
+  { href: "/stake", label: "Stake" },
   { href: "/docs", label: "Docs" },
 ];
 
@@ -33,7 +34,7 @@ export function Nav() {
           same solid black box as the nav, so it never runs into section content */}
       <div className="gutter fixed left-0 top-[28px] z-50">
         <a
-          href="#top"
+          href="/"
           aria-label="Ghost home"
           className={`flex h-10 items-center transition-[background-color,color,padding] duration-500 ease-[cubic-bezier(0.6,0,0.2,1)] ${
             compact ? "bg-black px-[14px] text-cream [--eye:#000]" : "bg-transparent px-0 text-ink [--eye:var(--paper)]"
@@ -48,7 +49,7 @@ export function Nav() {
           {/* full links, collapse into the menu button once you scroll */}
           <nav
             className={`hidden items-center overflow-hidden transition-[max-width,opacity] duration-500 ease-[cubic-bezier(0.6,0,0.2,1)] md:flex ${
-              compact ? "max-w-0 opacity-0" : "max-w-[420px] opacity-100"
+              compact ? "max-w-0 opacity-0" : "max-w-[560px] opacity-100"
             }`}
           >
             {links.map((l) => (
@@ -72,7 +73,7 @@ export function Nav() {
             </span>
           </button>
           <a
-            href={APP_URL}
+            href={LINKS.app}
             className="group ml-[3px] flex items-center gap-[10px] bg-sun px-[14px] text-[18px] leading-none tracking-[-0.01em] text-ink"
           >
             Launch app

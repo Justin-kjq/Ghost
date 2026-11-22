@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { GhostWordmark } from "@/components/ghost-mark";
-import { GITHUB_REPO } from "@/lib/addresses";
+import { LINKS } from "@/src/config/site";
 
 const links = [
-  { href: "#verify", label: "Verify" },
-  { href: "#how", label: "How it works" },
-  { href: GITHUB_REPO, label: "Docs", external: true },
+  { href: "/#how", label: "How it works" },
+  { href: LINKS.stake, label: "Stake" },
+  { href: LINKS.docs, label: "Docs" },
 ];
 
 export function SiteHeader() {
@@ -17,23 +17,11 @@ export function SiteHeader() {
           <GhostWordmark markClassName="size-8" />
         </Link>
         <nav className="hidden items-center gap-8 text-[14.5px] text-foreground/85 md:flex">
-          {links.map((l) =>
-            l.external ? (
-              <a
-                key={l.label}
-                href={l.href}
-                className="hover:text-foreground"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {l.label}
-              </a>
-            ) : (
-              <a key={l.label} href={l.href} className="hover:text-foreground">
-                {l.label}
-              </a>
-            ),
-          )}
+          {links.map((l) => (
+            <Link key={l.label} href={l.href} className="hover:text-foreground">
+              {l.label}
+            </Link>
+          ))}
         </nav>
         <div className="flex items-center gap-3">
           <details className="relative md:hidden">
@@ -42,19 +30,18 @@ export function SiteHeader() {
             </summary>
             <div className="absolute right-0 mt-3 w-44 rounded-lg border border-hairline bg-background p-3 text-sm shadow-sm">
               {links.map((l) => (
-                <a
+                <Link
                   key={l.label}
                   href={l.href}
                   className="block py-1.5 text-foreground/80 hover:text-foreground"
-                  {...(l.external ? { target: "_blank", rel: "noreferrer" } : {})}
                 >
                   {l.label}
-                </a>
+                </Link>
               ))}
             </div>
           </details>
           <Button asChild size="pill" className="h-10 px-5">
-            <Link href="/login">Launch app</Link>
+            <Link href={LINKS.app}>Launch app</Link>
           </Button>
         </div>
       </div>
