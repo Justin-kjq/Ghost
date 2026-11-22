@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { TurnArrow, Wordmark } from "@/components/landing/marks";
 import { SiteFooter } from "@/components/site-footer";
-import { LINKS } from "@/src/config/site";
+import { LINKS } from "@/lib/links";
 
 export const metadata: Metadata = {
   title: "Docs",

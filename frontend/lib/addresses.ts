@@ -6,9 +6,11 @@ import {
   isMainnetCluster,
 } from "./config";
 
-export const GITHUB_REPO = "https://github.com/arnabbhowmik07/Ghost";
+import { LINKS, SITE_URL as CANONICAL_SITE_URL } from "@/lib/links";
+
+export const GITHUB_REPO = LINKS.github;
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://ghost.arnabbhowmik.in";
+  process.env.NEXT_PUBLIC_SITE_URL || CANONICAL_SITE_URL;
 
 /** Known deployment fallbacks (see deployments.json). Used for explorer links. */
 export const DEVNET = {

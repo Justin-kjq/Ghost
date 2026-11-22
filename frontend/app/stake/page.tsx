@@ -5,12 +5,12 @@ import { TurnArrow } from "@/components/landing/marks";
 import { SiteFooter } from "@/components/site-footer";
 import { StakeFaq } from "@/components/stake/stake-faq";
 import { StakePanel } from "@/components/stake/stake-panel";
+import { LINKS } from "@/lib/links";
 import {
   DEXSCREENER_PAIR,
   STAKING_ENABLED,
   TOKEN_SYMBOL,
   dexscreenerEmbedUrl,
-  LINKS,
 } from "@/src/config/site";
 
 export const metadata: Metadata = {
@@ -81,6 +81,9 @@ export default function StakePage() {
               How Ghost Gas works
             </Link>
           </div>
+          <p className="t-14 mt-4 max-w-[40ch] font-normal text-ink/50">
+            Early mainnet pilot. Small limits per transaction.
+          </p>
         </header>
 
         <section className="gutter border-b border-ink/10 py-10 md:py-12">

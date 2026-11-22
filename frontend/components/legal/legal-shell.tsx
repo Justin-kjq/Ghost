@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Wordmark } from "@/components/landing/marks";
 import { SiteFooter } from "@/components/site-footer";
 import { LEGAL, LEGAL_PAGES } from "@/lib/legal";
-import { LINKS } from "@/src/config/site";
+import { LINKS } from "@/lib/links";
 
 export function LegalShell({
   title,

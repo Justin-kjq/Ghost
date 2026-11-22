@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { GhostWordmark } from "@/components/ghost-mark";
-import { LINKS } from "@/src/config/site";
+import { LINKS } from "@/lib/links";
 
 const links = [
   { href: "/#how", label: "How it works" },

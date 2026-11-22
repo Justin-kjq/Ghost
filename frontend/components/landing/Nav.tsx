@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LINKS } from "@/src/config/site";
+import { LINKS } from "@/lib/links";
 import { TurnArrow, Wordmark } from "./marks";
 
 const links = [

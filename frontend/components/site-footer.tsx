@@ -2,35 +2,33 @@ import Link from "next/link";
 import { Wordmark } from "@/components/landing/marks";
 import {
   FOOTER_COLUMNS,
-  SITE,
   SOCIAL_LINKS,
-} from "@/src/config/site";
+  isExternalHref,
+  type SiteLink,
+} from "@/lib/links";
+import { SITE } from "@/src/config/site";
 
 function FooterAnchor({
   href,
   children,
   external,
-  todo,
 }: {
   href: string;
   children: React.ReactNode;
   external?: boolean;
-  todo?: boolean;
 }) {
   const className =
     "text-cream/70 transition-opacity hover:text-cream hover:opacity-100";
+  const openExternal = external || isExternalHref(href);
 
-  if (todo || href === "#") {
+  if (openExternal) {
     return (
-      <span className={`${className} cursor-default`} title="Coming soon">
-        {children}
-      </span>
-    );
-  }
-
-  if (external || href.startsWith("http")) {
-    return (
-      <a href={href} target="_blank" rel="noreferrer" className={className}>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+      >
         {children}
       </a>
     );
@@ -40,6 +38,16 @@ function FooterAnchor({
     <Link href={href} className={className}>
       {children}
     </Link>
+  );
+}
+
+function SocialChip({ link }: { link: SiteLink }) {
+  return (
+    <FooterAnchor href={link.href} external={link.external}>
+      <span className="inline-flex h-9 min-w-9 items-center justify-center border border-cream/15 px-3 text-[13px] tracking-[-0.01em]">
+        {link.label}
+      </span>
+    </FooterAnchor>
   );
 }
 
@@ -57,16 +65,7 @@ export function SiteFooter() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               {SOCIAL_LINKS.map((s) => (
-                <FooterAnchor
-                  key={s.label}
-                  href={s.href}
-                  external={"external" in s ? s.external : false}
-                  todo={"todo" in s ? s.todo : false}
-                >
-                  <span className="inline-flex h-9 min-w-9 items-center justify-center border border-cream/15 px-3 text-[13px] tracking-[-0.01em]">
-                    {s.label}
-                  </span>
-                </FooterAnchor>
+                <SocialChip key={s.label} link={s} />
               ))}
             </div>
           </div>
@@ -78,11 +77,7 @@ export function SiteFooter() {
                 <ul className="mt-5 space-y-3">
                   {col.links.map((link) => (
                     <li key={link.label} className="t-14 font-normal">
-                      <FooterAnchor
-                        href={link.href}
-                        external={"external" in link ? link.external : false}
-                        todo={"todo" in link ? link.todo : false}
-                      >
+                      <FooterAnchor href={link.href} external={link.external}>
                         {link.label}
                       </FooterAnchor>
                     </li>

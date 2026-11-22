@@ -4,10 +4,17 @@
 
 | | |
 |---|---|
-| **Live UI** | [ghost.arnabbhowmik.in](https://ghost.arnabbhowmik.in) |
-| **API** | [ghost-api.arnabbhowmik.in](https://ghost-api.arnabbhowmik.in) |
-| **Docs** | [ghost.arnabbhowmik.in/docs](https://ghost.arnabbhowmik.in/docs) |
-| **Repo** | [github.com/arnabbhowmik07/Ghost](https://github.com/arnabbhowmik07/Ghost) |
+| **Site** | [ghostlabshq.xyz](https://ghostlabshq.xyz) |
+| **Docs** | [ghostlabshq.xyz/docs](https://ghostlabshq.xyz/docs) |
+| **Litepaper** | [ghostlabshq.xyz/litepaper.pdf](https://ghostlabshq.xyz/litepaper.pdf) |
+| **Pitch deck** | [ghostlabshq.xyz/pitch-deck](https://ghostlabshq.xyz/pitch-deck/) |
+| **Demo video** | [youtu.be/QTJv78KeQqM](https://youtu.be/QTJv78KeQqM) |
+| **X** | [x.com/ghostlabshq](https://x.com/ghostlabshq) |
+| **Telegram** | [t.me/ghostlabshqtg](https://t.me/ghostlabshqtg) |
+| **Discord** | [discord.gg/4xsr4MRhN](https://discord.gg/4xsr4MRhN) |
+| **LinkedIn** | [linkedin.com/company/ghostlabshq](https://www.linkedin.com/company/ghostlabshq) |
+| **GitHub** | [github.com/arnabbhowmik07/Ghost](https://github.com/arnabbhowmik07/Ghost) |
+| **Ambassador form** | [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSezSFDfI8AQyycSNpzFxfAgc9BlbM8vgElNf4DTHl7OCM__dA/viewform) |
 | **License** | MIT |
 
 > **Gas-first on mainnet.** Ghost Shield (optional private USDC pool) stays off until the pool program is deployed. Gas does not need it.
@@ -484,4 +491,4 @@ Intended section after launch (draft shape only):
 
 ---
 
-**Try it:** [ghost.arnabbhowmik.in](https://ghost.arnabbhowmik.in) · **Read the short docs:** [/docs](https://ghost.arnabbhowmik.in/docs)
+**Try it:** [ghostlabshq.xyz](https://ghostlabshq.xyz) · **Docs:** [/docs](https://ghostlabshq.xyz/docs) · **Litepaper:** [/litepaper.pdf](https://ghostlabshq.xyz/litepaper.pdf)

@@ -92,8 +92,8 @@ export default function LoginPage() {
           )}
 
           <p className="t-14 mt-10 font-normal text-ink/45">
-            Powered by Reown AppKit / WalletConnect. Unaudited. Ghost never holds
-            your note.
+            Powered by Reown AppKit / WalletConnect. Early pilot. Contracts not
+            yet audited. Use small amounts. Ghost never holds your note.
           </p>
         </div>
 

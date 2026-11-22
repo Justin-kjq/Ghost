@@ -333,7 +333,7 @@ export default function Home() {
                 {[
                   ["0 SOL", "on the signing wallet"],
                   ["1 note", "funds many sponsored sends"],
-                  ["~0.01", "USDC fee per send"],
+                  ["$0.01", "USDC fee per send"],
                 ].map(([v, k]) => (
                   <div
                     key={k}
@@ -403,13 +403,18 @@ export default function Home() {
                 between them — that link is the leak Gas is built to avoid.
               </p>
             </Reveal>
-            <a
-              href={APP_URL}
-              className="group inline-flex w-fit items-center gap-[10px] bg-ink px-[18px] py-[13px] text-[18px] leading-none tracking-[-0.01em] text-cream"
-            >
-              Launch app{" "}
-              <TurnArrow className="h-[14px] w-[14px] transition-transform group-hover:translate-x-[3px]" />
-            </a>
+            <div>
+              <a
+                href={APP_URL}
+                className="group inline-flex w-fit items-center gap-[10px] bg-ink px-[18px] py-[13px] text-[18px] leading-none tracking-[-0.01em] text-cream"
+              >
+                Launch app{" "}
+                <TurnArrow className="h-[14px] w-[14px] transition-transform group-hover:translate-x-[3px]" />
+              </a>
+              <p className="t-14 mt-3 max-w-[36ch] font-normal text-ink/50">
+                Early mainnet pilot. Small limits per transaction.
+              </p>
+            </div>
           </div>
           <HowPanel />
         </div>
