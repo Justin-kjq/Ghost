@@ -10,7 +10,7 @@
 | **Pitch deck** | [ghostlabshq.xyz/pitch-deck](https://ghostlabshq.xyz/pitch-deck/index.html) |
 | **Demo video** | [youtu.be/QTJv78KeQqM](https://youtu.be/QTJv78KeQqM) |
 | **X** | [x.com/ghostlabshq](https://x.com/ghostlabshq) |
-| **Telegram** | [t.me/ghostlabshqtg](https://t.me/ghostlabshqtg) |
+| **Telegram** | [t.me/ghostlabshq_xyz](https://t.me/ghostlabshq_xyz) |
 | **Discord** | [discord.gg/4xsr4MRhN](https://discord.gg/4xsr4MRhN) |
 | **LinkedIn** | [linkedin.com/company/ghostlabshq](https://www.linkedin.com/company/ghostlabshq) |
 | **GitHub** | [github.com/arnabbhowmik07/Ghost](https://github.com/arnabbhowmik07/Ghost) |

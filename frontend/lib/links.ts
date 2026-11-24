@@ -16,7 +16,7 @@ export const LINKS = {
   demoVideo: "https://youtu.be/QTJv78KeQqM",
   github: "https://github.com/arnabbhowmik07/Ghost",
   x: "https://x.com/ghostlabshq",
-  telegram: "https://t.me/ghostlabshqtg",
+  telegram: "https://t.me/ghostlabshq_xyz",
   discord: "https://discord.gg/4xsr4MRhN",
   linkedin: "https://www.linkedin.com/company/ghostlabshq",
   ambassador:
