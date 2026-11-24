@@ -87,6 +87,14 @@ export function useGhostWallet() {
     devConnecting;
 
   const connect = useCallback(async () => {
+    // Connect UI is login-only — never open AppKit from other routes.
+    if (
+      typeof window !== "undefined" &&
+      !window.location.pathname.startsWith("/login")
+    ) {
+      window.location.assign("/login");
+      return;
+    }
     await open({ view: "Connect", namespace: "solana" });
   }, [open]);
 

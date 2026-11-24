@@ -46,7 +46,7 @@ export const FOOTER_COLUMNS: { title: string; links: SiteLink[] }[] = [
   {
     title: "Product",
     links: [
-      { label: "App", href: LINKS.app },
+      { label: "App", href: LINKS.login },
       { label: "Stake", href: LINKS.stake },
       { label: "Docs", href: LINKS.docs },
     ],

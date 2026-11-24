@@ -41,7 +41,7 @@ export function SiteHeader() {
             </div>
           </details>
           <Button asChild size="pill" className="h-10 px-5">
-            <Link href={LINKS.app}>Launch app</Link>
+            <Link href={LINKS.login}>Launch app</Link>
           </Button>
         </div>
       </div>

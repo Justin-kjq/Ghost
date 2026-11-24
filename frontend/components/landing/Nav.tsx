@@ -73,7 +73,7 @@ export function Nav() {
             </span>
           </button>
           <a
-            href={LINKS.app}
+            href={LINKS.login}
             className="group ml-[3px] flex items-center gap-[10px] bg-sun px-[14px] text-[18px] leading-none tracking-[-0.01em] text-ink"
           >
             Launch app

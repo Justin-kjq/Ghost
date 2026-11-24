@@ -42,7 +42,7 @@ export default function DocsPage() {
           <Link href="/docs" className="text-ink transition-colors">
             Docs
           </Link>
-          <Link href={LINKS.app} className="text-ink/55 transition-colors hover:text-ink">
+          <Link href={LINKS.login} className="text-ink/55 transition-colors hover:text-ink">
             App
           </Link>
         </nav>
@@ -57,7 +57,7 @@ export default function DocsPage() {
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link
-              href={LINKS.app}
+              href={LINKS.login}
               className="group inline-flex items-center gap-[10px] bg-ink px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-cream"
             >
               Open app
@@ -187,7 +187,7 @@ export default function DocsPage() {
               </ul>
             </div>
             <Link
-              href={LINKS.app}
+              href={LINKS.login}
               className="group inline-flex w-fit items-center gap-[10px] bg-sun px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-ink"
             >
               Try Credits

@@ -2,7 +2,8 @@
 
 import { LINKS } from "@/lib/links";
 
-export const APP_URL = LINKS.app;
+/** Marketing CTAs land on login so the wallet connector never opens elsewhere. */
+export const APP_URL = LINKS.login;
 export const REPO_URL = LINKS.github;
 
 export const SCAN = "https://explorer.solana.com";

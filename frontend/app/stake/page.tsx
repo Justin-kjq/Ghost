@@ -68,7 +68,7 @@ export default function StakePage() {
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link
-              href={LINKS.app}
+              href={LINKS.login}
               className="group inline-flex items-center gap-[10px] bg-ink px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-cream"
             >
               Open app
