@@ -1,0 +1,4 @@
+Contact: mailto:mail@ghostlabshq.xyz
+Preferred-Languages: en
+Canonical: https://ghostlabshq.xyz/.well-known/security.txt
+Expires: 2027-12-31T23:59:59.000Z

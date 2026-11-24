@@ -16,6 +16,7 @@ import {
   transactions,
 } from "@/lib/landing-site";
 import { SiteFooter } from "@/components/site-footer";
+import { SITE_FAQS } from "@/lib/aeo";
 
 const pillars = [
   {
@@ -139,32 +140,7 @@ const cases: Case[] = [
   },
 ];
 
-const faqs = [
-  {
-    q: "What is Ghost Gas?",
-    a: "Prepaid network fees. X1 tops up USDC (or an allowlisted asset), gets a gas note, and any wallet holding that note can send tokens while Ghost pays the SOL fee.",
-  },
-  {
-    q: "Do I need SOL to send?",
-    a: "Not on the signing wallet. You need a funded gas note. Ghost’s relayer is the fee payer and debits a flat USDC fee from the note per send.",
-  },
-  {
-    q: "Who is X1 and X2?",
-    a: "X1 is the wallet that buys credit. X2 is the wallet that signs transfers (often with zero SOL). They can be the same person or different wallets.",
-  },
-  {
-    q: "What if I lose my gas note?",
-    a: "The note is a bearer voucher. Anyone with it can spend the remaining credit. Store it like a password; Ghost cannot recover it for you.",
-  },
-  {
-    q: "Is Shield the same thing?",
-    a: "No. Shield is the optional private pool (fixed 1 USDC deposits and ZK withdraws). Gas is the everyday product for sponsoring sends.",
-  },
-  {
-    q: "Which networks are supported?",
-    a: "Solana.",
-  },
-];
+const faqs = SITE_FAQS;
 
 export default function Home() {
   return (

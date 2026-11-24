@@ -1,203 +1,122 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { TurnArrow, Wordmark } from "@/components/landing/marks";
-import { SiteFooter } from "@/components/site-footer";
+import { TurnArrow } from "@/components/landing/marks";
+import {
+  DocsH1,
+  DocsH2,
+  DocsLead,
+  DocsList,
+  DocsP,
+  DocsShell,
+  DOCS_NAV,
+} from "@/components/docs/docs-shell";
+import { JsonLd } from "@/components/json-ld";
+import { AEO, HOW_TO_STEPS, howToJsonLd } from "@/lib/aeo";
 import { LINKS } from "@/lib/links";
 
 export const metadata: Metadata = {
   title: "Docs",
   description:
-    "Why Solana gas funding leaks privacy, and how Ghost Gas fixes it with prepaid credit.",
+    "Ghost Gas docs: prepaid Solana gas credits, gas notes, fees, trust model, API, and FAQ.",
+  alternates: { canonical: "/docs" },
 };
-
-const steps = [
-  {
-    title: "Primary wallet tops up",
-    body: "Your funded wallet sends USDC to Ghost and receives a gas note. That note is prepaid credit for network fees.",
-  },
-  {
-    title: "Alt wallet only signs",
-    body: "A second wallet (often with zero SOL) attaches the note, chooses a token and recipient, and signs the transfer.",
-  },
-  {
-    title: "Ghost pays the fee",
-    body: "Ghost covers the SOL fee on-chain. Tokens move from the alt wallet to the recipient. A small fee is taken from the gas note.",
-  },
-];
 
 export default function DocsPage() {
   return (
-    <div className="landing-root min-h-screen bg-cream text-ink">
-      <header className="gutter flex items-center justify-between border-b border-ink/15 bg-paper py-6">
-        <Link href="/" className="w-fit text-ink [--eye:var(--paper)]">
-          <Wordmark className="text-[20px]" />
+    <DocsShell activeHref="/docs">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [howToJsonLd()],
+        }}
+      />
+
+      <DocsH1>Ghost Gas docs</DocsH1>
+      <DocsLead>
+        {AEO.description} Start here, then jump into notes, fees, trust, and the
+        API.
+      </DocsLead>
+
+      <div className="mt-10 flex flex-wrap gap-3">
+        <Link
+          href={LINKS.login}
+          className="group inline-flex items-center gap-[10px] bg-ink px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-cream"
+        >
+          Open app
+          <TurnArrow className="h-[14px] w-[14px] transition-transform group-hover:translate-x-[3px]" />
         </Link>
-        <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 t-14">
-          <Link href="/" className="text-ink/55 transition-colors hover:text-ink">
-            Home
+        <Link
+          href="/docs/how-it-works"
+          className="inline-flex items-center border border-ink/20 bg-transparent px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-ink"
+        >
+          How it works
+        </Link>
+      </div>
+
+      <DocsH2>Quick map</DocsH2>
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        {DOCS_NAV.filter((n) => n.href !== "/docs").map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="border border-ink/15 bg-paper px-5 py-5 transition-colors hover:border-ink/35"
+          >
+            <p className="t-20">{item.label}</p>
+            <p className="t-14 mt-2 font-normal text-ink/50">{item.href}</p>
           </Link>
-          <Link href={LINKS.stake} className="text-ink/55 transition-colors hover:text-ink">
-            Stake
-          </Link>
-          <Link href="/docs" className="text-ink transition-colors">
-            Docs
-          </Link>
-          <Link href={LINKS.login} className="text-ink/55 transition-colors hover:text-ink">
-            App
-          </Link>
-        </nav>
-      </header>
+        ))}
+      </div>
 
-      <main>
-        <header className="gutter border-b border-ink/10 bg-paper pb-16 pt-20 md:pb-20 md:pt-28">
-          <h1 className="t-56 max-w-[14ch]">Ghost Gas, explained</h1>
-          <p className="t-20 mt-6 max-w-[42ch] font-normal leading-[1.45] text-ink/65">
-            The problem is simple. So is the fix. Prepaid credit lets an alt wallet send
-            tokens without ever holding SOL.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link
-              href={LINKS.login}
-              className="group inline-flex items-center gap-[10px] bg-ink px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-cream"
-            >
-              Open app
-              <TurnArrow className="h-[14px] w-[14px] transition-transform group-hover:translate-x-[3px]" />
-            </Link>
-            <Link
-              href="/#how"
-              className="inline-flex items-center border border-ink/20 bg-transparent px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-ink"
-            >
-              See the flow
-            </Link>
-          </div>
-        </header>
+      <DocsH2>In one line</DocsH2>
+      <DocsP>
+        <strong className="font-medium text-ink">{AEO.oneLiner}</strong>{" "}
+        {AEO.tagline}
+      </DocsP>
 
-        <section className="gutter grid gap-10 border-b border-ink/10 py-16 md:grid-cols-2 md:gap-16 md:py-24">
-          <div>
-            <h2 className="t-32">The pain</h2>
-            <p className="t-16 mt-4 max-w-[40ch] font-normal leading-[1.55] text-ink/65">
-              On Solana, every send needs SOL for fees. That forces a funding step that
-              often reveals who is behind a quiet wallet.
-            </p>
-          </div>
-          <ul className="border-t border-ink/15">
-            {[
-              {
-                t: "Alt wallets need SOL to move tokens",
-                d: "A wallet with tokens but no SOL is stuck. It cannot pay the network fee, so it cannot send.",
-              },
-              {
-                t: "Someone has to send SOL first",
-                d: "Usually a primary wallet tops up the alt wallet with SOL. That transfer is public on-chain.",
-              },
-              {
-                t: "The funding link is the leak",
-                d: "Observers can connect the funded wallet to the spender. Privacy breaks before the real transfer even happens.",
-              },
-            ].map((item) => (
-              <li key={item.t} className="border-b border-ink/15 py-6">
-                <p className="t-20">{item.t}</p>
-                <p className="t-14 mt-2 max-w-[48ch] font-normal leading-[1.5] text-ink/60">
-                  {item.d}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="gutter grid gap-10 border-b border-ink/10 bg-sand py-16 md:grid-cols-2 md:gap-16 md:py-24">
-          <div>
-            <h2 className="t-32">The solution</h2>
-            <p className="t-16 mt-4 max-w-[40ch] font-normal leading-[1.55] text-ink/65">
-              Ghost Gas moves the fee off the alt wallet. The primary wallet prepays Ghost.
-              The alt wallet only signs.
-            </p>
-          </div>
-          <div className="border border-ink/15 bg-paper p-6 md:p-8">
-            <p className="t-24 max-w-[28ch]">
-              No SOL handoff from primary to alt. That link never has to exist.
-            </p>
-            <dl className="mt-10 grid gap-6 border-t border-ink/15 pt-8 sm:grid-cols-2">
-              <div>
-                <dt className="t-14 text-ink/50">Primary wallet</dt>
-                <dd className="t-16 mt-2 font-normal leading-[1.45] text-ink/75">
-                  Pays USDC once, receives a gas note (prepaid credit).
-                </dd>
-              </div>
-              <div>
-                <dt className="t-14 text-ink/50">Alt wallet</dt>
-                <dd className="t-16 mt-2 font-normal leading-[1.45] text-ink/75">
-                  Holds tokens, attaches the note, signs. Can have zero SOL.
-                </dd>
-              </div>
-              <div>
-                <dt className="t-14 text-ink/50">Ghost</dt>
-                <dd className="t-16 mt-2 font-normal leading-[1.45] text-ink/75">
-                  Pays the Solana fee and debits a flat USDC amount from the note.
-                </dd>
-              </div>
-              <div>
-                <dt className="t-14 text-ink/50">Recipient</dt>
-                <dd className="t-16 mt-2 font-normal leading-[1.45] text-ink/75">
-                  Gets the tokens from the alt wallet. Tokens never pass through Ghost.
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </section>
-
-        <section className="gutter py-16 md:py-24">
-          <h2 className="t-32 max-w-[18ch]">Three steps</h2>
-          <ol className="mt-10 border-t border-ink/15">
-            {steps.map((step, i) => (
-              <li
-                key={step.title}
-                className="grid grid-cols-[48px_1fr] gap-4 border-b border-ink/15 py-7 md:gap-8"
-              >
-                <span className="font-mono text-[12px] tracking-[0.06em] text-ink/45">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <p className="t-20">{step.title}</p>
-                  <p className="t-14 mt-2 max-w-[54ch] font-normal leading-[1.5] text-ink/60">
-                    {step.body}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="gutter border-y border-ink/10 bg-night py-16 text-cream md:py-20">
-          <div className="grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
+      <DocsH2>Three steps</DocsH2>
+      <ol className="mt-6 border-t border-ink/15">
+        {HOW_TO_STEPS.map((step, i) => (
+          <li
+            key={step.name}
+            className="grid grid-cols-[48px_1fr] gap-4 border-b border-ink/15 py-6"
+          >
+            <span className="font-mono text-[12px] tracking-[0.06em] text-ink/45">
+              {String(i + 1).padStart(2, "0")}
+            </span>
             <div>
-              <h2 className="t-32 max-w-[18ch]">What Ghost is not pretending</h2>
-              <ul className="mt-8 max-w-[54ch] space-y-4 t-16 font-normal leading-[1.5] text-cream/70">
-                <li>
-                  The gas credit ledger is operated by Ghost&apos;s relayer. You are trusting that
-                  service for debit accounting.
-                </li>
-                <li>
-                  Ghost Shield (the private pool) is separate. Gas is the everyday send product.
-                </li>
-                <li>
-                  This is an unaudited MVP. Start small until you are comfortable with the trust
-                  model.
-                </li>
-              </ul>
+              <p className="t-20">{step.name}</p>
+              <p className="t-14 mt-2 max-w-[54ch] font-normal leading-[1.5] text-ink/60">
+                {step.text}
+              </p>
             </div>
-            <Link
-              href={LINKS.login}
-              className="group inline-flex w-fit items-center gap-[10px] bg-sun px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-ink"
-            >
-              Try Credits
-              <TurnArrow className="h-[14px] w-[14px] transition-transform group-hover:translate-x-[3px]" />
-            </Link>
-          </div>
-        </section>
-      </main>
+          </li>
+        ))}
+      </ol>
 
-      <SiteFooter />
-    </div>
+      <DocsH2>What Ghost Gas is not</DocsH2>
+      <DocsList
+        items={[
+          "Not a mixer or tumbler.",
+          "Not a custodial exchange.",
+          "Not the same product as Ghost Shield.",
+          "Not a promise that explorers cannot see the SPL transfer itself — only that X1 never has to fund X2 with SOL for gas.",
+        ]}
+      />
+
+      <div className="mt-14 border border-ink/15 bg-night p-8 text-cream md:p-10">
+        <p className="t-24 max-w-[28ch]">Ready to try it.</p>
+        <p className="t-16 mt-4 max-w-[42ch] font-normal text-cream/65">
+          Top up Credits from a funded wallet, then send from an alt with the gas
+          note attached.
+        </p>
+        <Link
+          href={LINKS.login}
+          className="group mt-8 inline-flex items-center gap-[10px] bg-sun px-[18px] py-[13px] text-[17px] leading-none tracking-[-0.01em] text-ink"
+        >
+          Try Credits
+          <TurnArrow className="h-[14px] w-[14px] transition-transform group-hover:translate-x-[3px]" />
+        </Link>
+      </div>
+    </DocsShell>
   );
 }

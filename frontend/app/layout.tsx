@@ -6,7 +6,9 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { JsonLd } from "@/components/json-ld";
 import { SITE_URL } from "@/lib/addresses";
+import { AEO, siteGraphJsonLd } from "@/lib/aeo";
 import "./globals.css";
 
 const serif = Instrument_Serif({
@@ -32,31 +34,54 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+const siteDescription = AEO.description;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Ghost | Private USDC on Solana",
+    default: `Ghost | ${AEO.oneLiner.replace(/\.$/, "")}`,
     template: "%s · Ghost",
   },
-  description:
-    "Shielded USDC deposits and gasless private withdrawals on Solana. Proofs stay in the browser.",
+  description: siteDescription,
+  applicationName: AEO.name,
+  authors: [{ name: AEO.legalName, url: SITE_URL }],
+  creator: AEO.legalName,
+  publisher: AEO.legalName,
+  category: "finance",
+  keywords: [
+    "Ghost",
+    "Ghost Gas",
+    "Solana",
+    "prepaid gas",
+    "gasless",
+    "USDC",
+    "fee payer",
+    "gas note",
+    "wallet privacy",
+  ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
-    siteName: "Ghost",
-    title: "Ghost | Private USDC on Solana",
-    description:
-      "Shielded USDC deposits and gasless private withdrawals on Solana.",
+    siteName: AEO.name,
+    title: `Ghost | ${AEO.oneLiner.replace(/\.$/, "")}`,
+    description: siteDescription,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ghost | Private USDC on Solana",
-    description:
-      "Shielded USDC deposits and gasless private withdrawals on Solana.",
+    title: `Ghost | ${AEO.oneLiner.replace(/\.$/, "")}`,
+    description: siteDescription,
   },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
+  },
+  manifest: "/manifest.webmanifest",
+  other: {
+    "ai-content": "llms.txt",
   },
 };
 
@@ -68,6 +93,7 @@ export default function RootLayout({
       <body
         className={`${serif.variable} ${sans.variable} ${instrument.variable} ${mono.variable} min-h-screen`}
       >
+        <JsonLd data={siteGraphJsonLd(siteDescription)} />
         <Providers>{children}</Providers>
       </body>
     </html>
