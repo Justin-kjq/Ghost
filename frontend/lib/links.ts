@@ -13,6 +13,7 @@ export const LINKS = {
   docs: "/docs",
   litepaper: "/litepaper.pdf",
   pitchDeck: "/pitch-deck/index.html",
+  brandKit: "/brand-kit/index.html",
   demoVideo: "https://youtu.be/QTJv78KeQqM",
   github: "https://github.com/arnabbhowmik07/Ghost",
   x: "https://x.com/ghostlabshq",
@@ -56,6 +57,7 @@ export const FOOTER_COLUMNS: { title: string; links: SiteLink[] }[] = [
     links: [
       { label: "Litepaper", href: LINKS.litepaper, external: true },
       { label: "Pitch deck", href: LINKS.pitchDeck, external: true },
+      { label: "Brand kit", href: LINKS.brandKit, external: true },
       { label: "Demo video", href: LINKS.demoVideo, external: true },
       { label: "GitHub", href: LINKS.github, external: true },
     ],

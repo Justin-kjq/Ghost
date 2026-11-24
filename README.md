@@ -8,6 +8,7 @@
 | **Docs** | [ghostlabshq.xyz/docs](https://ghostlabshq.xyz/docs) |
 | **Litepaper** | [ghostlabshq.xyz/litepaper.pdf](https://ghostlabshq.xyz/litepaper.pdf) |
 | **Pitch deck** | [ghostlabshq.xyz/pitch-deck](https://ghostlabshq.xyz/pitch-deck/index.html) |
+| **Brand kit** | [ghostlabshq.xyz/brand-kit](https://ghostlabshq.xyz/brand-kit/index.html) |
 | **Demo video** | [youtu.be/QTJv78KeQqM](https://youtu.be/QTJv78KeQqM) |
 | **X** | [x.com/ghostlabshq](https://x.com/ghostlabshq) |
 | **Telegram** | [t.me/ghostlabshq_xyz](https://t.me/ghostlabshq_xyz) |

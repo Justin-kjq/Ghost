@@ -20,6 +20,16 @@ const nextConfig: NextConfig = {
         destination: "/pitch-deck/index.html",
         permanent: false,
       },
+      {
+        source: "/brand-kit",
+        destination: "/brand-kit/index.html",
+        permanent: false,
+      },
+      {
+        source: "/brand-kit/",
+        destination: "/brand-kit/index.html",
+        permanent: false,
+      },
     ];
   },
   transpilePackages: [
