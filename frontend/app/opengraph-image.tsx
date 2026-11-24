@@ -20,15 +20,14 @@ export default function OpengraphImage() {
           fontFamily: "Georgia, serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <svg width="56" height="56" viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="14" stroke="#161412" strokeWidth="2" />
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <svg width="48" height="50" viewBox="0 0 19 20" fill="none">
             <path
-              d="M16 8.2c-3.7 0-6.3 2.8-6.3 6.4 0 2.5 1.35 4.35 3.35 6.45L16 24.6l2.95-3.55c2-2.1 3.35-3.95 3.35-6.45 0-3.6-2.6-6.4-6.3-6.4Z"
-              stroke="#161412"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
+              d="M2 9a7.5 7.5 0 0115 0v10.5l-2.5-2.2-2.5 2.2-2.5-2.2-2.5 2.2L4.5 17.3 2 19.5z"
+              fill="#161412"
             />
+            <rect x="6" y="7.5" width="2.4" height="4" rx="1.2" fill="#F7F4EF" />
+            <rect x="10.6" y="7.5" width="2.4" height="4" rx="1.2" fill="#F7F4EF" />
           </svg>
           <div style={{ fontSize: 36, letterSpacing: "-0.02em" }}>Ghost</div>
         </div>
@@ -51,7 +50,7 @@ export default function OpengraphImage() {
               color: "#5A544E",
             }}
           >
-            Shielded USDC on Solana.
+            The fee that doesn&apos;t dox you.
           </div>
         </div>
       </div>
