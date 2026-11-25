@@ -16,6 +16,7 @@ import {
 } from "@/components/app-workspace";
 import { useGhostWallet } from "@/hooks/useGhostWallet";
 import {
+  GasCreditDepositPendingError,
   NATIVE_SOL,
   fetchGasNoteBalance,
   listGasNotes,
@@ -44,6 +45,10 @@ export default function CreditsPage() {
   const [quote, setQuote] = useState<CreditQuote | null>(null);
   const [quoteBusy, setQuoteBusy] = useState(false);
   const [quoteError, setQuoteError] = useState("");
+  const [pendingRefund, setPendingRefund] = useState<{
+    message: string;
+    depositTx: string;
+  } | null>(null);
 
   function refresh() {
     setNotes(listGasNotes());
@@ -168,6 +173,7 @@ export default function CreditsPage() {
       return;
     }
     setBusy(true);
+    setPendingRefund(null);
     try {
       toast.message(`Depositing ${activeAsset.label} for gas credit…`);
       const stored = await topUpGasCredits({
@@ -188,7 +194,17 @@ export default function CreditsPage() {
         fetchWalletAssets(publicKey).then(setAssets).catch(() => undefined);
       }
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : String(e));
+      if (e instanceof GasCreditDepositPendingError) {
+        setPendingRefund({
+          message: e.message,
+          depositTx: e.depositTx,
+        });
+        toast.error(
+          "Deposit sent, but credit was not issued. Refund within 48 hours, or email support@ghostlabshq.xyz.",
+        );
+      } else {
+        toast.error(e instanceof Error ? e.message : String(e));
+      }
     } finally {
       setBusy(false);
     }
@@ -272,6 +288,35 @@ export default function CreditsPage() {
         </>
       }
     >
+      {pendingRefund ? (
+        <WorkspacePanel className="border-ink/20 bg-sand/50">
+          <p className="text-[15px] text-ink">Deposit not registered</p>
+          <p className="mt-2 text-[13px] font-normal leading-relaxed text-ink/70">
+            Your transfer went on-chain, but Ghost could not issue a gas note. If
+            the funds were credited to Ghost, they will be refunded within 48
+            hours — or reach support at{" "}
+            <a
+              href="mailto:support@ghostlabshq.xyz"
+              className="underline underline-offset-2"
+            >
+              support@ghostlabshq.xyz
+            </a>
+            .
+          </p>
+          <p className="mt-3 break-all font-mono text-[11px] text-ink/45">
+            Tx {pendingRefund.depositTx}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-4"
+            onClick={() => setPendingRefund(null)}
+          >
+            Dismiss
+          </Button>
+        </WorkspacePanel>
+      ) : null}
+
       <WorkspacePanel>
         <div className="space-y-5">
           <div>
