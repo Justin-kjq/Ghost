@@ -32,6 +32,45 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/sitemap",
+        destination: "/api/sitemap",
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/sitemap",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600",
+          },
+        ],
+      },
+      {
+        source: "/api/sitemap",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600",
+          },
+        ],
+      },
+      {
+        source: "/sitemap.xml",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600",
+          },
+        ],
+      },
+    ];
+  },
   transpilePackages: [
     "@ghost/sdk",
     "@reown/appkit",

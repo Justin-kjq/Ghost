@@ -31,11 +31,13 @@ export default function robots(): MetadataRoute.Robots {
           "/llms.txt",
           "/llms-full.txt",
           "/litepaper.pdf",
+          "/sitemap",
+          "/sitemap.xml",
         ],
         disallow: ["/app/"],
       })),
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    // Prefer extensionless /sitemap — Cloudflare sometimes interferes with *.xml for Googlebot.
+    sitemap: [`${SITE_URL}/sitemap`, `${SITE_URL}/sitemap.xml`],
   };
 }

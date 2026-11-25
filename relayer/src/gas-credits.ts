@@ -400,8 +400,14 @@ function requireCommitmentMemo(parsed: ParsedTx, commitment: string) {
     if (programId !== MEMO_PROGRAM_ID) continue;
 
     let memo = "";
-    if (ix.parsed && typeof (ix.parsed as { info?: string }).info === "string") {
-      memo = String((ix.parsed as { info: string }).info);
+    // Helius/jsonParsed often returns Memo as a plain string (parsed: "e9b11e…").
+    if (typeof ix.parsed === "string") {
+      memo = ix.parsed;
+    } else if (
+      ix.parsed &&
+      typeof (ix.parsed as { info?: unknown }).info === "string"
+    ) {
+      memo = String((ix.parsed as { info?: unknown }).info);
     } else if (typeof ix.data === "string") {
       try {
         memo = Buffer.from(ix.data, "base64").toString("utf8");

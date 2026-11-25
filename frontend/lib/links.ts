@@ -22,8 +22,7 @@ export const LINKS = {
   telegram: "https://t.me/ghostlabshq_xyz",
   discord: "https://discord.gg/4xsr4MRhN",
   linkedin: "https://www.linkedin.com/company/ghostlabshq",
-  ambassador:
-    "https://docs.google.com/forms/d/e/1FAIpQLSezSFDfI8AQyycSNpzFxfAgc9BlbM8vgElNf4DTHl7OCM__dA/viewform",
+  ambassador: "https://forms.gle/6WNNsDzP1eyA3vhf9",
   terms: "/terms",
   privacy: "/privacy",
   cookies: "/cookies",

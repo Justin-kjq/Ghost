@@ -16,7 +16,7 @@
 | **Discord** | [discord.gg/4xsr4MRhN](https://discord.gg/4xsr4MRhN) |
 | **LinkedIn** | [linkedin.com/company/ghostlabshq](https://www.linkedin.com/company/ghostlabshq) |
 | **GitHub** | [github.com/arnabbhowmik07/Ghost](https://github.com/arnabbhowmik07/Ghost) |
-| **Ambassador form** | [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSezSFDfI8AQyycSNpzFxfAgc9BlbM8vgElNf4DTHl7OCM__dA/viewform) |
+| **Ambassador form** | [Google Form](https://forms.gle/6WNNsDzP1eyA3vhf9) |
 | **License** | MIT |
 
 > **Gas-first on mainnet.** Ghost Shield (optional private USDC pool) stays off until the pool program is deployed. Gas does not need it.
